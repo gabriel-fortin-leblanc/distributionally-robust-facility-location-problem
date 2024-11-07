@@ -1,6 +1,6 @@
 \documentclass[letterpaper, 12pt]{article}
 
-\usepackage[margin=1in]{geometry}
+\usepackage[margin=0.7in]{geometry}
 \usepackage{authblk}
 \usepackage{enumitem}
 \usepackage{hyperref}
@@ -18,17 +18,25 @@
 
 \begin{document}
 	\maketitle
-	
+	\section*{Introduction}
 	% TODO: Introduction of the problem
 	% Introduction to the facility problem
+	Facility location is a important task in transportation and logistics, where a decision maker selects sites to minimize costs while meeting customer demand. Real-world demand is often uncertain and can vary according to probability distributions. Also, the decision of the location of the facility influences the customer demand. That is why proposing a framework to model decision-dependent demand uncertainty is needed.  
 	% Why the distributionally robust approach is something good.
 	
+
 	\section*{Litterature}
 	%TODO: Present the paper
-	
+	Basciftci \& al. model this by proposing a distributionally robust optimization (DRO) model, given unknown distribution of the random demand vector whose mean
+	and variance values are functions of facility-location decisions \cite{basciftci2021distributionally}.
+	This paper introduces a new framework for facility location problems under distributionally robust, decision-dependent demand. The approach uses an ambiguity set based on the moments of demand distributions, allowing for a monolithic optimization model. It specifically addresses cases where the finite support demand mean and variance are piecewise linear in facility location choices. Leveraging linear programming duality and convex envelopes, the model is reformulated into an exact Mixed-integer linear programming (MILP) with valid inequalities to enhance its performance. specifically, by writing a duality of the problem they transform two-stage distributionally robust optimization problem to a bilinear monolithic optimization. Then, by assuming distribution's parameters are linear function of decision, they use McCormick envelopes to write bilinear optimization problem to a MILP. Finally, they propose valid inequalities to enhance finding MILP optimal solution.
+
+
 	\section*{Objectives}
 	%TODO: Objectives: 1. repoduce results  2. Improvements / Avenues
 	
+	The objective of this project is to reproduce the results obtained in this article. Next, we will generalize the moment based ambiguity set to a general polyhedral ambiguity set. 
+
 	\bibliographystyle{plain}
 	\bibliography{ref}
 \end{document}
