@@ -1,3 +1,4 @@
+# LaTeX
 *.out
 *.aux
 *.log
@@ -7,3 +8,6 @@ doc/*.pdf
 *.blg
 *.fls
 *.fdb_latexmk
+
+# Python Environments
+.env
