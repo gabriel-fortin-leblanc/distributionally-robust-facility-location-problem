@@ -11,3 +11,6 @@ doc/*.pdf
 
 # Python Environments
 .env
+
+# Tox cache
+.tox
