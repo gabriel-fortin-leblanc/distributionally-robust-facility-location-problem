@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import numpy as np
 
 
@@ -25,8 +26,15 @@ class FLP:
         (Capacity-Facility)
     """
 
-
     def __init__(
+        self,
+        nf: int,
+        nc: int,
+        sd: np.ndarray,
+        oc: np.ndarray,
+        tc: np.ndarray,
+        cf: np.ndarray,
+    ):
         """
         Build the object.
 
@@ -49,21 +57,12 @@ class FLP:
             The capacity of the facilities. Must be of size `nf`.
             (Capacity-Facility)
         """
-        self,
-        nf: int,
-        nc: int,
-        sd: np.ndarray,
-        oc: np.ndarray,
-        tc: np.ndarray,
-        cf: np.ndarray
-    ):
         self.nf = nf
         self.nc = nc
         self.sd = sd
         self.oc = oc
         self.tc = tc
         self.cf = cf
-    
 
     @property
     def nf(self):
@@ -97,7 +96,7 @@ class FLP:
     def sd(self, value):
         if type(value) is not np.ndarray:
             raise TypeError("'sd' must be a Numby Array")
-        if value.ndim != 1 or np.squeeze(sd).ndim != 1:
+        if value.ndim != 1 or np.squeeze(value).ndim != 1:
             raise ValueError("'sd' must have only one dimension")
         self._sd = value
 
@@ -109,7 +108,7 @@ class FLP:
     def oc(self, value):
         if type(value) is not np.ndarray:
             raise TypeError("'oc' must be a Numby Array")
-        if value.ndim != 1 or np.squeeze(sd).ndim != 1:
+        if value.ndim != 1 or np.squeeze(value).ndim != 1:
             raise ValueError("'oc' must have only one dimension")
         if value.shape[0] != self.nf:
             raise ValueError("'oc' must be of size 'nf'")
@@ -125,9 +124,9 @@ class FLP:
     def tc(self, value):
         if type(value) is not np.ndarray:
             raise TypeError("'tc' must be a Numby Array")
-        if value.ndim != 2 or np.squeeze(sd).ndim != 2:
+        if value.ndim != 2 or np.squeeze(value).ndim != 2:
             raise ValueError("'tc' must have only two dimensions")
-        if value.shape[0] != (self.nf, self.nc):
+        if value.shape != (self.nf, self.nc):
             raise ValueError("'tc' must be of size ['nf', 'nc']")
         if (value <= 0).any():
             raise ValueError("'tc' must contain strictly positive values")
@@ -141,10 +140,10 @@ class FLP:
     def cf(self, value):
         if type(value) is not np.ndarray:
             raise TypeError("'cf' must be a Numby Array")
-        if value.ndim != 1 or np.squeeze(sd).ndim != 1:
+        if value.ndim != 1 or np.squeeze(value).ndim != 1:
             raise ValueError("'cf' must have only one dimension")
-        if value.shape[0] != (self.nf, self.nc):
+        if value.shape[0] != self.nf:
             raise ValueError("'cf' must be of size 'nf'")
         if (value <= 0).any():
             raise ValueError("'cf' must contain strictly positive values")
-       self._cf = value 
+        self._cf = value
