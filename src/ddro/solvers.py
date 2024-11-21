@@ -172,6 +172,7 @@ class BASSolver(Solver):
         self._lbd_sig = value
 
     def solve(flp: FLP) -> bool:
+        J, I, f, c, C, xi, r, p = _cvn(flp)
         # TODO: To implement
         pass
 
@@ -185,4 +186,6 @@ class BASSolver(Solver):
         c = flp.tc
         C = flp.cf
         xi = flp.sd
-        return (J, I, f, c, C, xi)
+        r = flp.rc
+        p = flp.pc
+        return (J, I, f, c, C, xi, r, p)
