@@ -16,4 +16,4 @@ doc/*.pdf
 .tox
 
 # Python bytecode
-*/__pycache__
+__pycache__/
