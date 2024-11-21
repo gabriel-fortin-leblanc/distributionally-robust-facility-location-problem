@@ -36,3 +36,8 @@ class TestFLP:
         assert np.array_equal(flp.oc, oc)
         assert np.array_equal(flp.tc, tc)
         assert np.array_equal(flp.cf, cf)
+
+
+def test_flp_generator():
+    flp = pg.flp_generator()
+    assert type(flp) is pg.FLP

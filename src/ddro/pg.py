@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Callable, Optional
+
 import numpy as np
 
 
@@ -147,3 +149,94 @@ class FLP:
         if (value <= 0).any():
             raise ValueError("'cf' must contain strictly positive values")
         self._cf = value
+
+
+def flp_generator(
+    nf: int = 10,
+    nc: int = 20,
+    sd: np.ndarray = np.arange(1, 101),
+    oc: Optional[np.ndarray] = None,
+    fp: Optional[np.ndarray] = None,
+    csp: Optional[np.ndarray] = None,
+    cf: Optional[np.ndarray] = None,
+    tcf: Optional[float] = None,
+    dist: Callable[[np.ndarray, np.ndarray], float] = (
+        lambda x, y: np.linalg.norm(x - y)
+    ),
+):
+    """
+    Generate a FLP problem (See FLP).
+
+    Parameters
+    ----------
+    nf : int
+        Number of possible locations for building facilities. Default: 10
+        (Number-Facilities)
+    nc : int
+        Number of customer sites. Default: 20 (Number-Customers)
+    sd : array-like
+        The finite support of values the demand takes (Support-Demand).
+        Default: [1, ..., 100]
+    oc : array-like[nf] or a generator of positive values
+        The costs for opening sites. Must be of size `nf`. Default: Uniform
+        on [5000, 10000). (Opening-Cost)
+    fp : array-like[nf, 2] or a generator
+        The position of the possible facilities. Default:
+        Uniform on [-10, 10). (Facility-Position)
+    csp : array-like[nc, 2] or a generator
+        The position of the customer sites. Default: Uniform on [-10, 10).
+        (Customer-Site-Position)
+    cf : array-like[nf] or a generator of positive values
+        The capacity of the facilities. Must be of size `nf`. Default: Uniform
+        on [10, 20). (Capacity-Facility)
+    tcf : float or a generator of positive values
+        The factor for transportation costs. It is proportional to the
+        distance between a facility and a customer site. Default: Uniform
+        on [1, 3). (Transportation-Cost-Factor)
+    dist : distance function
+        The distance used between facilities and customer sites. Default:
+        euclidian distance.
+
+    Returns
+    -------
+    FLP
+        A facility location problem.
+    """
+    if nf <= 0:
+        raise ValueError("nf must be strictly postive")
+    if nc <= 0:
+        raise ValueError("nc must be strictly postive")
+
+    # Compute the transportation costs
+    _fp = (
+        fp
+        if fp is not None
+        else np.random.uniform(low=-10, high=10, size=(nf, 2))
+    )
+    _csp = (
+        csp
+        if csp is not None
+        else np.random.uniform(low=-10, high=10, size=(nc, 2))
+    )
+    _tcf = tcf if tcf is not None else np.random.uniform(low=1, high=3)
+    tc = np.empty((nf, nc))
+    for i in range(nf):
+        for j in range(nc):
+            tc[i, j] = _tcf * dist(_fp[i], _csp[j])
+
+    return FLP(
+        nf=nf,
+        nc=nc,
+        sd=sd,
+        oc=(
+            oc
+            if oc is not None
+            else np.random.uniform(low=5000, high=10000, size=nf)
+        ),
+        tc=tc,
+        cf=(
+            cf
+            if cf is not None
+            else np.random.uniform(low=10, high=20, size=nf)
+        ),
+    )
