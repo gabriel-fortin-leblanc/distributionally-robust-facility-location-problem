@@ -26,6 +26,11 @@ class FLP:
     cf : array-like[nf]
         The capacity of the facilities. Must be of size `nf`.
         (Capacity-Facility)
+    rc : array-like[nc]
+        The revenue for selling one item in costumer sites. (Revenue-Costumer)
+    pc : array-like[nc]
+        The penalty for not responding to the demands of costumer sites.
+        (Penalty-Costumer)
     """
 
     def __init__(
@@ -36,6 +41,8 @@ class FLP:
         oc: np.ndarray,
         tc: np.ndarray,
         cf: np.ndarray,
+        rc: np.ndarray,
+        pc: np.ndarray,
     ):
         """
         Build the object.
@@ -58,6 +65,12 @@ class FLP:
         cf : array-like[nf]
             The capacity of the facilities. Must be of size `nf`.
             (Capacity-Facility)
+        rc : array-like[nc]
+            The revenue for selling one item in costumer sites.
+            (Revenue-Costumer)
+        pc : array-like[nc]
+            The penalty for not responding to the demands of costumer sites.
+            (Penalty-Costumer)
         """
         self.nf = nf
         self.nc = nc
@@ -65,6 +78,8 @@ class FLP:
         self.oc = oc
         self.tc = tc
         self.cf = cf
+        self.rc = rc
+        self.pc = pc
 
     @property
     def nf(self):
@@ -150,6 +165,22 @@ class FLP:
             raise ValueError("'cf' must contain strictly positive values")
         self._cf = value
 
+    @property
+    def rc(self):
+        return self._rc
+
+    @rc.setter
+    def rc(self, value):
+        self._rc = value
+
+    @property
+    def pc(self):
+        return self._pc
+
+    @pc.setter
+    def pc(self, value):
+        self._pc = value
+
 
 def flp_generator(
     nf: int = 10,
@@ -159,6 +190,8 @@ def flp_generator(
     fp: Optional[np.ndarray] = None,
     csp: Optional[np.ndarray] = None,
     cf: Optional[np.ndarray] = None,
+    rc: Optional[np.ndarray] = None,
+    pc: Optional[np.ndarray] = None,
     tcf: Optional[float] = None,
     dist: Callable[[np.ndarray, np.ndarray], float] = (
         lambda x, y: np.linalg.norm(x - y)
@@ -189,6 +222,12 @@ def flp_generator(
     cf : array-like[nf] or a generator of positive values
         The capacity of the facilities. Must be of size `nf`. Default: Uniform
         on [10, 20). (Capacity-Facility)
+    rc : array-like[nc]
+        The revenue for selling one item in a specific costumer site. Must be
+        of size `nc`. Default: 150 * `nc`.
+    pc : array-like[nc]
+        The penalty for not reponding to the demands. Must be of size `nc`.
+        Default: 225 * `nc`.
     tcf : float or a generator of positive values
         The factor for transportation costs. It is proportional to the
         distance between a facility and a customer site. Default: Uniform
@@ -239,4 +278,6 @@ def flp_generator(
             if cf is not None
             else np.random.uniform(low=10, high=20, size=nf)
         ),
+        pc=(pc if pc is not None else np.repeat(225, nc)),
+        rc=(rc if rc is not None else np.repeat(150, nc)),
     )
