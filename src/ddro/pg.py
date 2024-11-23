@@ -26,6 +26,11 @@ class FLP:
     cf : array-like[nf]
         The capacity of the facilities. Must be of size `nf`.
         (Capacity-Facility)
+    rc : array-like[nc]
+        The revenue for selling an item in costumer sites. (Revenue-Costumer)
+    pc : array-like[nc]
+        The penalty for not responding to the demands of costumer sites.
+        (Penalty-Costumer)
     """
 
     def __init__(
@@ -36,6 +41,8 @@ class FLP:
         oc: np.ndarray,
         tc: np.ndarray,
         cf: np.ndarray,
+        rc: np.ndarray,
+        pc: np.ndarray,
     ):
         """
         Build the object.
@@ -50,14 +57,20 @@ class FLP:
         sd : array-like
             The finite support values the demand takes (Support-Demand)
         oc : array-like[nf]
-            The costs for opening sites. Must be of size `nf`. (Opening-Cost)
+            The costs for opening sites. (Opening-Cost)
         tc : array-like[nf, nc]
             The costs for transporting one item from facility `i` to customer
-            sites `j`. Must be a matrix of size `nf`x`nc`.
+            sites `j`.
             (Transportation-Cost)
         cf : array-like[nf]
-            The capacity of the facilities. Must be of size `nf`.
+            The capacity of the facilities.
             (Capacity-Facility)
+        rc : array-like[nc]
+            The revenue for selling an item in costumer sites.
+            (Revenue-Costumer)
+        pc : array-like[nc]
+            The penalty for not responding to the demands of costumer sites.
+            (Penalty-Costumer)
         """
         self.nf = nf
         self.nc = nc
@@ -65,6 +78,8 @@ class FLP:
         self.oc = oc
         self.tc = tc
         self.cf = cf
+        self.rc = rc
+        self.pc = pc
 
     @property
     def nf(self):
@@ -100,6 +115,8 @@ class FLP:
             raise TypeError("'sd' must be a Numby Array")
         if value.ndim != 1 or np.squeeze(value).ndim != 1:
             raise ValueError("'sd' must have only one dimension")
+        if (value <= 0).any():
+            raise ValueError("'sd' must contain strictly positive values")
         self._sd = value
 
     @property
@@ -150,6 +167,38 @@ class FLP:
             raise ValueError("'cf' must contain strictly positive values")
         self._cf = value
 
+    @property
+    def rc(self):
+        return self._rc
+
+    @rc.setter
+    def rc(self, value):
+        if type(value) is not np.ndarray:
+            raise TypeError("'rc' must be a Numby Array")
+        if value.ndim != 1 or np.squeeze(value).ndim != 1:
+            raise ValueError("'rc' must have only one dimension")
+        if value.shape[0] != self.nc:
+            raise ValueError("'rc' must be of size 'nc'")
+        if (value <= 0).any():
+            raise ValueError("'rc' must contain strictly positive values")
+        self._rc = value
+
+    @property
+    def pc(self):
+        return self._pc
+
+    @pc.setter
+    def pc(self, value):
+        if type(value) is not np.ndarray:
+            raise TypeError("'pc' must be a Numby Array")
+        if value.ndim != 1 or np.squeeze(value).ndim != 1:
+            raise ValueError("'pc' must have only one dimension")
+        if value.shape[0] != self.nc:
+            raise ValueError("'pc' must be of size 'nc'")
+        if (value <= 0).any():
+            raise ValueError("'pc' must contain strictly positive values")
+        self._pc = value
+
 
 def flp_generator(
     nf: int = 10,
@@ -159,6 +208,8 @@ def flp_generator(
     fp: Optional[np.ndarray] = None,
     csp: Optional[np.ndarray] = None,
     cf: Optional[np.ndarray] = None,
+    rc: Optional[np.ndarray] = None,
+    pc: Optional[np.ndarray] = None,
     tcf: Optional[float] = None,
     dist: Callable[[np.ndarray, np.ndarray], float] = (
         lambda x, y: np.linalg.norm(x - y)
@@ -178,17 +229,22 @@ def flp_generator(
         The finite support of values the demand takes (Support-Demand).
         Default: [1, ..., 100]
     oc : array-like[nf] or a generator of positive values
-        The costs for opening sites. Must be of size `nf`. Default: Uniform
-        on [5000, 10000). (Opening-Cost)
+        The costs for opening sites. Default: Uniform on [5000, 10000).
+        (Opening-Cost)
     fp : array-like[nf, 2] or a generator
-        The position of the possible facilities. Default:
-        Uniform on [-10, 10). (Facility-Position)
+        The position of the possible facilities. Default: Uniform on
+        [-10, 10). (Facility-Position)
     csp : array-like[nc, 2] or a generator
         The position of the customer sites. Default: Uniform on [-10, 10).
         (Customer-Site-Position)
     cf : array-like[nf] or a generator of positive values
-        The capacity of the facilities. Must be of size `nf`. Default: Uniform
+        The capacity of the facilities. Default: Uniform
         on [10, 20). (Capacity-Facility)
+    rc : array-like[nc]
+        The revenue for selling one item in a specific costumer site.
+        Default: 150 * `nc`.
+    pc : array-like[nc]
+        The penalty for not reponding to the demands. Default: 225 * `nc`.
     tcf : float or a generator of positive values
         The factor for transportation costs. It is proportional to the
         distance between a facility and a customer site. Default: Uniform
@@ -239,4 +295,6 @@ def flp_generator(
             if cf is not None
             else np.random.uniform(low=10, high=20, size=nf)
         ),
+        pc=(pc if pc is not None else np.repeat(225, nc)),
+        rc=(rc if rc is not None else np.repeat(150, nc)),
     )
