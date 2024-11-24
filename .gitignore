@@ -2,7 +2,7 @@
 *.out
 *.aux
 *.log
-doc/*.pdf
+*.pdf
 *.synctex.gz
 *.bbl
 *.blg
