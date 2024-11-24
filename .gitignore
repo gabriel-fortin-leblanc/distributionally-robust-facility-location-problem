@@ -1,10 +1,7 @@
 # LaTeX
 *.out
 *.aux
-*.nav
 *.log
-*.snm
-*.toc
 doc/*.pdf
 *.synctex.gz
 *.bbl
