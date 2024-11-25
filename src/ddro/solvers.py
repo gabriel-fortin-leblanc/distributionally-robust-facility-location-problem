@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from warnings import deprecated
 from typing import Optional
 
 import numpy as np
@@ -54,7 +55,7 @@ class BASSolver(Solver):
     sig_bar : array-like[nc]
         Factor from decision variable `y` for computing the 'mean' of
         variances of the uncertainty set.
-    eps_under_sig : array-like[nc]
+    eps_lower_sig : array-like[nc]
         Lower bound on the second moments of the uncertainty set.
     eps_upper_sig : array-like[nc]
         Upper bound on the second moments of the uncertainty set.
@@ -81,9 +82,9 @@ class BASSolver(Solver):
         eps_mu: Optional[np.ndarray] = None,
         lbd_mu: Optional[np.ndarray] = None,
         sig_bar: Optional[np.ndarray] = None,
-        eps_under_sig: Optional[np.ndarray] = None,
+        eps_lower_sig: Optional[np.ndarray] = None,
         eps_upper_sig: Optional[np.ndarray] = None,
-        lbs_sig: Optional[np.ndarray] = None,
+        lbd_sig: Optional[np.ndarray] = None,
         nf: Optional[int] = None,
         nc: Optional[int] = None,
     ):
@@ -101,11 +102,12 @@ class BASSolver(Solver):
             'mean' of expected values on the uncertainty set. Default: 0.
         lbd_mu : array-like[nc, nf], optional
             Impact from opened facilities on 'mean' of expected values of the
-            uncertainty set.
+            uncertainty set. Default: will be computed during the solve
+            phase. transpose(exp(-transportation costs/25))
         sig_bar : array-like[nc], optional
             Factor from decision variable `y` for computing the 'mean' of
             variances of the uncertainty set. Default: Equals to `mu_bar`.
-        eps_under_sig : array-like[nc], optional
+        eps_lower_sig : array-like[nc], optional
             Lower bound on the second moments of the uncertainty set.
             Default: 1.
         eps_upper_sig : array-like[nc], optional
@@ -113,13 +115,29 @@ class BASSolver(Solver):
             Default: 1.
         lbd_sig : array-like[nc, nf], optional
             Impact from opened facilities on 'mean' of variances of the
-            uncertainty set.
+            uncertainty set. Default: will be computed during the solve phase.
+            transpose(exp(-transportation costs/25))
         nf : int, optional
             Number of possible locations for building facilities. Default: 10.
         nc : int, optional
             Number of costumer sites. Default: 20.
         """
-        pass
+        self.nf = nf if nf is not None else 10
+        self.nc = nc if nc is not None else 20
+        self.mu_bar = (
+            mu_bar if mu_bar is not None
+            else np.random.uniform(low=20, high-40, size=self.nc)
+        )
+        self.eps_mu = eps_mu if eps_mu is not None else 0
+        self.lbd_mu = lbd_mu
+        self.sig_bar = (
+            sig_bar if sig_bar is not None
+            else np.array(self.mu_bar, copy=True)
+        )
+        self.eps_lower_sig = eps_lower_sig if eps_lower_sig is not None else 1
+        self.eps_upper_sig = eps_upper_sig if eps_upper_sig is not None else 1
+        self.lbd_sig = lbd_sig
+
 
     @property
     def nf(self):
@@ -179,13 +197,16 @@ class BASSolver(Solver):
 
     @lbd_mu.setter
     def lbd_mu(self, value):
-        if type(value) is not np.ndarray:
-            raise TypeError("'lbd_mu' must be a Numpy array")
-        if value.ndim != 2 or np.squeeze(value) != 2:
-            raise ValueError("'lbd_mu' must have two dimensions")
-        if value.shape[0] != self.nc or value.shape[1] != self.nf:
-            raise ValueError("'lbd_mu' must be of size ['nc', 'nf']")
-        self._lbd_mu = value
+        if value is None:
+            self._lbd_mu
+        else:
+            if type(value) is not np.ndarray:
+                raise TypeError("'lbd_mu' must be a Numpy array")
+            if value.ndim != 2 or np.squeeze(value) != 2:
+                raise ValueError("'lbd_mu' must have two dimensions")
+            if value.shape[0] != self.nc or value.shape[1] != self.nf:
+                raise ValueError("'lbd_mu' must be of size ['nc', 'nf']")
+            self._lbd_mu = value
 
     @property
     def sig_bar(self):
@@ -202,18 +223,18 @@ class BASSolver(Solver):
         self._sig_bar = value
 
     @property
-    def eps_under_sig(self):
-        return self._eps_under_sig
+    def eps_lower_sig(self):
+        return self._eps_lower_sig
 
-    @eps_under_sig.setter
-    def eps_under_sig(self, value):
+    @eps_lower_sig.setter
+    def eps_lower_sig(self, value):
         if type(value) is not np.ndarray:
-            raise TypeError("'eps_under_sig' must be a Numpy array")
+            raise TypeError("'eps_lower_sig' must be a Numpy array")
         if value.ndim != 1 or np.squeeze(value) != 1:
-            raise ValueError("'eps_under_sig' must have only one dimension")
+            raise ValueError("'eps_lower_sig' must have only one dimension")
         if value.shape[0] != self.nc:
-            raise ValueError("'eps_under_sig' must be of size 'nc'")
-        self._eps_under_sig = value
+            raise ValueError("'eps_lower_sig' must be of size 'nc'")
+        self._eps_lower_sig = value
 
     @property
     def eps_upper_sig(self):
@@ -235,13 +256,16 @@ class BASSolver(Solver):
 
     @lbd_sig.setter
     def lbd_sig(self, value):
-        if type(value) is not np.ndarray:
-            raise TypeError("'lbd_sig' must be a Numpy array")
-        if value.ndim != 2 or np.squeeze(value) != 2:
-            raise ValueError("'lbd_sig' must have two dimensions")
-        if value.shape[0] != self.nc or value.shape[1] != self.nf:
-            raise ValueError("'lbd_sig' must be of size ['nc', 'nf']")
-        self._lbd_sig = value
+        if value is None:
+            self.lbd_mu = value
+        else:
+            if type(value) is not np.ndarray:
+                raise TypeError("'lbd_sig' must be a Numpy array")
+            if value.ndim != 2 or np.squeeze(value) != 2:
+                raise ValueError("'lbd_sig' must have two dimensions")
+            if value.shape[0] != self.nc or value.shape[1] != self.nf:
+                raise ValueError("'lbd_sig' must be of size ['nc', 'nf']")
+            self._lbd_sig = value
 
     # The following comment is for using confusing variable names like J, I,
     # etc. without being harassed by flake8.
@@ -251,6 +275,7 @@ class BASSolver(Solver):
         # TODO: To implement
         pass
 
+    @deprecated("Deprecated inner function: don't need to convert variables")
     def _cvn(self, flp: FLP):
         """
         Convert notations to the ones used in the referenced article.
