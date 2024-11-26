@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
-from warnings import deprecated
 from typing import Optional
+from warnings import deprecated
 
+import gurobipy as gp
 import numpy as np
+from gurobipy import GRB
 
 from .pg import FLP
 
@@ -66,13 +68,13 @@ class BASSolver(Solver):
         Number of possible locations for building facilities.
     nc : int
         Number of costumer sites.
-    delt1_upper : float
+    self.delt1_upper : float
         An upper bound on the dual variable delta_1. See [1].
-    delt2_upper : float
+    self.delt2_upper : float
         An upper bound on the dual variable delta_2. See [2].
-    gam1_upper : float
+    self.gam1_upper : float
         An upper bound on the dual variable gamma_1. See [1].
-    gam2_upper : float
+    self.gam2_upper : float
         An upper bound on the dual variable gamma_2. See [2].
 
     References
@@ -137,23 +139,24 @@ class BASSolver(Solver):
         self.nf = nf if nf is not None else 10
         self.nc = nc if nc is not None else 20
         self.mu_bar = (
-            mu_bar if mu_bar is not None
-            else np.random.uniform(low=20, high-40, size=self.nc)
+            mu_bar
+            if mu_bar is not None
+            else np.random.uniform(low=20, high=40, size=self.nc)
         )
         self.eps_mu = eps_mu if eps_mu is not None else 0
         self.lbd_mu = lbd_mu
         self.sig_bar = (
-            sig_bar if sig_bar is not None
+            sig_bar
+            if sig_bar is not None
             else np.array(self.mu_bar, copy=True)
         )
         self.eps_lower_sig = eps_lower_sig if eps_lower_sig is not None else 1
         self.eps_upper_sig = eps_upper_sig if eps_upper_sig is not None else 1
         self.lbd_sig = lbd_sig
-        self.delt1_upper = delt1_upper
-        self.delt2_upper = delt2_upper
-        self.gam1_upper = gam1_upper
-        self.gam2_upper = gam2_upper
-
+        self.self.delt1_upper = self.delt1_upper
+        self.self.delt2_upper = self.delt2_upper
+        self.self.gam1_upper = self.gam1_upper
+        self.self.gam2_upper = self.gam2_upper
 
     @property
     def nf(self):
@@ -246,13 +249,13 @@ class BASSolver(Solver):
         return self._eps_mu
 
     @eps_mu.setter
-    def mu_eps(self, value):
+    def eps_mu(self, value):
         if type(value) is not np.ndarray:
-            raise TypeError("'mu_eps' must be a Numpy array")
+            raise TypeError("'self.eps_mu' must be a Numpy array")
         if value.ndim != 1 or np.squeeze(value) != 1:
-            raise ValueError("'mu_eps' must have only one dimension")
+            raise ValueError("'self.eps_mu' must have only one dimension")
         if value.shape[0] != self.nc:
-            raise ValueError("'mu_eps' must be of size 'nc'")
+            raise ValueError("'self.eps_mu' must be of size 'nc'")
         self._eps_mu = value
 
     @property
@@ -331,27 +334,218 @@ class BASSolver(Solver):
                 raise ValueError("'lbd_sig' must be of size ['nc', 'nf']")
             self._lbd_sig = value
 
-    # The following comment is for using confusing variable names like J, I,
-    # etc. without being harassed by flake8.
-    # flake8: noqa: E741
     def solve(self, flp: FLP) -> bool:
+        if flp.nc != self.nc:
+            raise ValueError(
+                "'flp' not compatible. Must have the same"
+                "'nc' value than the solver"
+            )
+        if flp.nf != self.nf:
+            raise ValueError(
+                "'flp' not compatible. Must have the same"
+                "'nf' value than the solver"
+            )
+
         __lbd_mu = (
             self.lbd_mu if self.lbd_mu is not None else np.exp(-flp.tc.T / 25)
         )
         __lbd_sig = (
-            self.lbd_sig if self.lbd_sig is not None
+            self.lbd_sig
+            if self.lbd_sig is not None
             else np.array(__lbd_mu, copy=True)
         )
 
+        model = gp.Model("Facility Location Problem")
+        # Define decision variables
+        y = model.addMVar(self.nf, vtype=GRB.BINARY, name="Opening variable")
+        alph = model.addMVar(self.nc)
+        delt1 = model.addMVar(self.nc)
+        delt2 = model.addMVar(self.nc)
+        gam1 = model.addMVar(self.nc)
+        gam2 = model.addMVar(self.nc)
+        Delt1 = model.addMVar((self.nc, self.nf))
+        Delt2 = model.addMVar((self.nc, self.nf))
+        Gam1 = model.addMVar((self.nc, self.nf))
+        Gam2 = model.addMVar((self.nc, self.nf))
+        Psi1 = model.addMVar((self.nc, self.nf, self.nf))
+        Psi2 = model.addMVar((self.nc, self.nf, self.nf))
+        Y = model.addMVar((self.nf, self.nf))
+        Theta = model.addMVar(self.nc)
+
+        # Useful constant
+        Lbd = -self.sig_bar[:, np.newaxis] * __lbd_sig + (self.mu_bar**2)[
+            :, np.newaxis
+        ] * (2 * __lbd_mu + __lbd_mu * __lbd_mu)
+        # Add objective
+        obj = flp.oc @ y
+        for j in range(self.nc):
+            obj += (
+                alph[j]
+                + delt1[j] * (self.mu_bar[j] + self.eps_mu[j])
+                - delt2[j] * (self.mu_bar[j] - self.eps_mu[j])
+            )
+            for i in range(self.nf):
+                obj += self.mu_bar[j] * (
+                    __lbd_mu[j, i] * (Delt1[j, i] - Delt2[j, i])
+                )
+            obj += (self.sig_bar[j] + self.mu_bar[j] * self.mu_bar[j]) * (
+                self.eps_upper_sig[j] * gam1[j]
+                - self.eps_lower_sig[j] * gam2[j]
+            )
+            for i in range(self.nf):
+                obj += Lbd[j, i] * (
+                    self.eps_upper_sig[j] * Gam1[j, i]
+                    - self.eps_lower_sig[j] * Gam2[j, i]
+                )
+            for l in range(1, self.nf):
+                for m in range(l):
+                    obj += (
+                        2
+                        * self.mu_bar[j]
+                        * self.mu_bar[j]
+                        * __lbd_mu[j, l]
+                        * __lbd_mu[j, m]
+                        * (
+                            self.eps_upper_sig[j] * Psi1[j, l, m]
+                            - self.eps_lower_sig[j] * Psi2[j, l, m]
+                        )
+                    )
+        model.setObjective(obj)
+
+        # Add constraints (17b)
+        for j in range(self.nc):
+            for k in range(flp.sd.shape[0]):
+                # i == 0 for the following line
+                model.addConstr(
+                    alph[j]
+                    + (delt1[j] - delt2[j]) * flp.sd[k]
+                    + (gam1[j] - gam2[j]) * flp.sd[k] ** 2
+                    >= (flp.pc[j] - flp.rc[j]) * flp.sd[k]
+                    + (flp.cf * y * (flp.tc[:, j] - flp.pc[j])).sum()
+                )
+                for i in range(self.nf):
+                    model.addConstr(
+                        alph[j]
+                        + (delt1[j] - delt2[j]) * flp.sd[k]
+                        + (gam1[j] - gam2[j]) * flp.sd[k] ** 2
+                        >= (flp.tc[i, j] - flp.rc[j]) * flp.sd[k]
+                        + (flp.cf * y * (flp.tc[:, j] - flp.tc[i, j])).sum()
+                    )
+        # Add McCormick envelopes constaints
+        for j in range(self.nc):
+            for i in range(self.nf):
+                model.addConstrs(
+                    cstr
+                    for cstr in self._m1_constaints(
+                        Delt1[j, i], delt1[j], y[i], 0, self.delt1_upper
+                    )
+                )
+                model.addConstrs(
+                    cstr
+                    for cstr in self._m1_constaints(
+                        Delt2[j, i], delt2[j], y[i], 0, self.delt2_upper
+                    )
+                )
+                model.addConstrs(
+                    cstr
+                    for cstr in self._m1_constaints(
+                        Gam1[j, i], gam1[j], y[i], 0, self.gam1_upper
+                    )
+                )
+                model.addConstrs(
+                    cstr
+                    for cstr in self._m1_constaints(
+                        Gam2[j, i], gam2[j], y[i], 0, self.gam2_upper
+                    )
+                )
+                for m in range(self.nf):
+                    model.addConstrs(
+                        cstr
+                        for cstr in self._m2_constaints(
+                            Psi1[j, i, m],
+                            gam1[j],
+                            y[i],
+                            y[m],
+                            0,
+                            self.gam1_upper,
+                        )
+                    )
+                    model.addConstrs(
+                        cstr
+                        for cstr in self._m2_constaints(
+                            Psi2[j, i, m],
+                            gam2[j],
+                            y[i],
+                            y[m],
+                            0,
+                            self.gam2_upper,
+                        )
+                    )
+        # Add non-negative constaints
+        model.addConstr(delt1 >= 0)
+        model.addConstr(delt2 >= 0)
+        model.addConstr(gam1 >= 0)
+        model.addConstr(gam2 >= 0)
+        # Add valid constaints
+        tmp = 0
+        for l in range(1, self.nf):
+            for m in range(l):
+                tmp += __lbd_mu[:, l] * __lbd_mu[l, m] * Y[l, m]
+        for j in range(self.nc):
+            model.addConstr(
+                Theta[j]
+                == self.sig_bar[j]
+                + self.mu_bar[j] ** 2
+                + (Lbd[j] * y).sum()
+                + 2 * self.mu_bar[j] ** 2 * tmp[j]
+            )
+            model.addConstr(
+                flp.sd[0] * flp.sd[1]
+                - (flp.sd[0] + flp.sd[1])
+                * (
+                    self.mu_bar[j] * (1 + (__lbd_mu[j] * y).sum())
+                    - self.eps_mu[j]
+                )
+                + Theta[j] * self.eps_upper_sig[j]
+                >= 0
+            )
+            model.addConstr(
+                flp.sd[-2] * flp.sd[-1]
+                - (flp.sd[-2] + flp.sd[-1])
+                * (
+                    self.mu_bar[j] * (1 + (__lbd_mu[j] * y).sum())
+                    - self.eps_mu[j]
+                )
+                + Theta[j] * self.eps_upper_sig[j]
+                >= 0
+            )
+            model.addConstr(
+                -flp.sd[0] * flp.sd[-1]
+                + (flp.sd[0] + flp.sd[-1])
+                * (
+                    self.mu_bar[j] * (1 + (__lbd_mu[j] * y).sum())
+                    + self.eps_mu[j]
+                )
+                - Theta[j] * self.eps_lower_sig[j]
+                >= 0
+            )
+        for l in range(1, self.nf):
+            for m in range(l):
+                model.addConstrs(
+                    cstr
+                    for cstr in self._m1_constaints(Y[l, m], y[l], y[m], 0, 1)
+                )
+
+        model.optimize()
+        self.y = y.x
 
     def _m1_constraints(w, eta, z, lower, upper):
         return [
             eta - (1 - z) * upper <= w,
             w <= eta - lower * (1 - z),
             lower * z <= w,
-            w <= upper * z
+            w <= upper * z,
         ]
-
 
     def _m2_constraints(w, eta, z1, z2, lower, upper):
         return [
@@ -361,13 +555,15 @@ class BASSolver(Solver):
             w <= eta - lower * (1 - z2),
             w >= lower * (-1 + z1 + z2),
             w >= eta + upper * (-2 + z1 + z2),
-            z1 <= 1, # Maybe remove 4 lines
+            z1 <= 1,  # Maybe remove 4 lines
             z2 <= 1,
             lower <= eta,
-            eta <= upper
+            eta <= upper,
         ]
-        
 
+    # The following comment is for using confusing variable names like J, I,
+    # etc. without being harassed by flake8.
+    # flake8: noqa: E741
     @deprecated("Deprecated inner function: don't need to convert variables")
     def _cvn(self, flp: FLP):
         """
