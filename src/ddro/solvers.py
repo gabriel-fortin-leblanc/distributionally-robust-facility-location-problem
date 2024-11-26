@@ -1,6 +1,6 @@
+import warnings
 from abc import ABC, abstractmethod
 from typing import Optional
-import warnings
 
 import gurobipy as gp
 import numpy as np
@@ -442,32 +442,32 @@ class BASSolver(Solver):
             for i in range(self.nf):
                 model.addConstrs(
                     cstr
-                    for cstr in self._m1_constaints(
+                    for cstr in self._m1_constraints(
                         Delt1[j, i], delt1[j], y[i], 0, self.delt1_upper
                     )
                 )
                 model.addConstrs(
                     cstr
-                    for cstr in self._m1_constaints(
+                    for cstr in self._m1_constraints(
                         Delt2[j, i], delt2[j], y[i], 0, self.delt2_upper
                     )
                 )
                 model.addConstrs(
                     cstr
-                    for cstr in self._m1_constaints(
+                    for cstr in self._m1_constraints(
                         Gam1[j, i], gam1[j], y[i], 0, self.gam1_upper
                     )
                 )
                 model.addConstrs(
                     cstr
-                    for cstr in self._m1_constaints(
+                    for cstr in self._m1_constraints(
                         Gam2[j, i], gam2[j], y[i], 0, self.gam2_upper
                     )
                 )
                 for m in range(self.nf):
                     model.addConstrs(
                         cstr
-                        for cstr in self._m2_constaints(
+                        for cstr in self._m2_constraints(
                             Psi1[j, i, m],
                             gam1[j],
                             y[i],
@@ -478,7 +478,7 @@ class BASSolver(Solver):
                     )
                     model.addConstrs(
                         cstr
-                        for cstr in self._m2_constaints(
+                        for cstr in self._m2_constraints(
                             Psi2[j, i, m],
                             gam2[j],
                             y[i],
@@ -539,13 +539,13 @@ class BASSolver(Solver):
             for m in range(l):
                 model.addConstrs(
                     cstr
-                    for cstr in self._m1_constaints(Y[l, m], y[l], y[m], 0, 1)
+                    for cstr in self._m1_constraints(Y[l, m], y[l], y[m], 0, 1)
                 )
 
         model.optimize()
         self.y = y.x
 
-    def _m1_constraints(w, eta, z, lower, upper):
+    def _m1_constraints(self, w, eta, z, lower, upper):
         return [
             eta - (1 - z) * upper <= w,
             w <= eta - lower * (1 - z),
@@ -553,7 +553,7 @@ class BASSolver(Solver):
             w <= upper * z,
         ]
 
-    def _m2_constraints(w, eta, z1, z2, lower, upper):
+    def _m2_constraints(self, w, eta, z1, z2, lower, upper):
         return [
             w <= upper * z1,
             w <= upper * z2,

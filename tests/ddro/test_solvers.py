@@ -19,3 +19,10 @@ class TestBASSolver:
         assert solver.lbd_sig is None
         assert solver.nf == 10
         assert solver.nc == 20
+
+    @pytest.mark.slow
+    def test_solve(self):
+        flp = pg.flp_generator()
+        solver = solvers.BASSolver()
+        solver.solve(flp)
+        assert type(solver.y) is np.ndarray
