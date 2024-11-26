@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional
-from warnings import deprecated
+import warnings
 
 import gurobipy as gp
 import numpy as np
@@ -143,20 +143,24 @@ class BASSolver(Solver):
             if mu_bar is not None
             else np.random.uniform(low=20, high=40, size=self.nc)
         )
-        self.eps_mu = eps_mu if eps_mu is not None else 0
+        self.eps_mu = eps_mu if eps_mu is not None else np.zeros(self.nc)
         self.lbd_mu = lbd_mu
         self.sig_bar = (
             sig_bar
             if sig_bar is not None
             else np.array(self.mu_bar, copy=True)
         )
-        self.eps_lower_sig = eps_lower_sig if eps_lower_sig is not None else 1
-        self.eps_upper_sig = eps_upper_sig if eps_upper_sig is not None else 1
+        self.eps_lower_sig = (
+            eps_lower_sig if eps_lower_sig is not None else np.ones(self.nc)
+        )
+        self.eps_upper_sig = (
+            eps_upper_sig if eps_upper_sig is not None else np.ones(self.nc)
+        )
         self.lbd_sig = lbd_sig
-        self.self.delt1_upper = self.delt1_upper
-        self.self.delt2_upper = self.delt2_upper
-        self.self.gam1_upper = self.gam1_upper
-        self.self.gam2_upper = self.gam2_upper
+        self.delt1_upper = delt1_upper
+        self.delt2_upper = delt2_upper
+        self.gam1_upper = gam1_upper
+        self.gam2_upper = gam2_upper
 
     @property
     def nf(self):
@@ -188,7 +192,7 @@ class BASSolver(Solver):
 
     @delt1_upper.setter
     def delt1_upper(self, value):
-        if type(value) is not float or type(value) is not int:
+        if type(value) is not float and type(value) is not int:
             raise TypeError("'delt1_upper' must be a float or a int")
         if value <= 0:
             raise ValueError("'delt1_upper' mustbe strictly positive")
@@ -200,7 +204,7 @@ class BASSolver(Solver):
 
     @delt2_upper.setter
     def delt2_upper(self, value):
-        if type(value) is not float or type(value) is not int:
+        if type(value) is not float and type(value) is not int:
             raise TypeError("'delt2_upper' must be a float or a int")
         if value <= 0:
             raise ValueError("'delt2_upper' mustbe strictly positive")
@@ -212,7 +216,7 @@ class BASSolver(Solver):
 
     @gam1_upper.setter
     def gam1_upper(self, value):
-        if type(value) is not float or type(value) is not int:
+        if type(value) is not float and type(value) is not int:
             raise TypeError("'gam1_upper' must be a float or a int")
         if value <= 0:
             raise ValueError("'gam1_upper' mustbe strictly positive")
@@ -224,7 +228,7 @@ class BASSolver(Solver):
 
     @gam2_upper.setter
     def gam2_upper(self, value):
-        if type(value) is not float or type(value) is not int:
+        if type(value) is not float and type(value) is not int:
             raise TypeError("'gam2_upper' must be a float or a int")
         if value <= 0:
             raise ValueError("'gam2_upper' mustbe strictly positive")
@@ -238,7 +242,7 @@ class BASSolver(Solver):
     def mu_bar(self, value):
         if type(value) is not np.ndarray:
             raise TypeError("'mu_bar' must be a Numpy array")
-        if value.ndim != 1 or np.squeeze(value) != 1:
+        if value.ndim != 1 or np.squeeze(value).ndim != 1:
             raise ValueError("'mu_bar' must have only one dimension")
         if value.shape[0] != self.nc:
             raise ValueError("'mu_bar' must be of size 'nc'")
@@ -252,7 +256,7 @@ class BASSolver(Solver):
     def eps_mu(self, value):
         if type(value) is not np.ndarray:
             raise TypeError("'self.eps_mu' must be a Numpy array")
-        if value.ndim != 1 or np.squeeze(value) != 1:
+        if value.ndim != 1 or np.squeeze(value).ndim != 1:
             raise ValueError("'self.eps_mu' must have only one dimension")
         if value.shape[0] != self.nc:
             raise ValueError("'self.eps_mu' must be of size 'nc'")
@@ -265,11 +269,11 @@ class BASSolver(Solver):
     @lbd_mu.setter
     def lbd_mu(self, value):
         if value is None:
-            self._lbd_mu
+            self._lbd_mu = value
         else:
             if type(value) is not np.ndarray:
                 raise TypeError("'lbd_mu' must be a Numpy array")
-            if value.ndim != 2 or np.squeeze(value) != 2:
+            if value.ndim != 2 or np.squeeze(value).ndim != 2:
                 raise ValueError("'lbd_mu' must have two dimensions")
             if value.shape[0] != self.nc or value.shape[1] != self.nf:
                 raise ValueError("'lbd_mu' must be of size ['nc', 'nf']")
@@ -283,7 +287,7 @@ class BASSolver(Solver):
     def sig_bar(self, value):
         if type(value) is not np.ndarray:
             raise TypeError("'sig_bar' must be a Numpy array")
-        if value.ndim != 1 or np.squeeze(value) != 1:
+        if value.ndim != 1 or np.squeeze(value).ndim != 1:
             raise ValueError("'sig_bar' must have only one dimension")
         if value.shape[0] != self.nc:
             raise ValueError("'sig_bar' must be of size 'nc'")
@@ -297,7 +301,7 @@ class BASSolver(Solver):
     def eps_lower_sig(self, value):
         if type(value) is not np.ndarray:
             raise TypeError("'eps_lower_sig' must be a Numpy array")
-        if value.ndim != 1 or np.squeeze(value) != 1:
+        if value.ndim != 1 or np.squeeze(value).ndim != 1:
             raise ValueError("'eps_lower_sig' must have only one dimension")
         if value.shape[0] != self.nc:
             raise ValueError("'eps_lower_sig' must be of size 'nc'")
@@ -311,7 +315,7 @@ class BASSolver(Solver):
     def eps_upper_sig(self, value):
         if type(value) is not np.ndarray:
             raise TypeError("'eps_upper_sig' must be a Numpy array")
-        if value.ndim != 1 or np.squeeze(value) != 1:
+        if value.ndim != 1 or np.squeeze(value).ndim != 1:
             raise ValueError("'eps_upper_sig' must have only one dimension")
         if value.shape[0] != self.nc:
             raise ValueError("'eps_upper_sig' must be of size 'nc'")
@@ -324,11 +328,11 @@ class BASSolver(Solver):
     @lbd_sig.setter
     def lbd_sig(self, value):
         if value is None:
-            self.lbd_mu = value
+            self._lbd_sig = value
         else:
             if type(value) is not np.ndarray:
                 raise TypeError("'lbd_sig' must be a Numpy array")
-            if value.ndim != 2 or np.squeeze(value) != 2:
+            if value.ndim != 2 or np.squeeze(value).ndim != 2:
                 raise ValueError("'lbd_sig' must have two dimensions")
             if value.shape[0] != self.nc or value.shape[1] != self.nf:
                 raise ValueError("'lbd_sig' must be of size ['nc', 'nf']")
@@ -349,11 +353,13 @@ class BASSolver(Solver):
         __lbd_mu = (
             self.lbd_mu if self.lbd_mu is not None else np.exp(-flp.tc.T / 25)
         )
+        __lbd_mu /= __lbd_mu.sum(1)[:, np.newaxis]
         __lbd_sig = (
             self.lbd_sig
             if self.lbd_sig is not None
             else np.array(__lbd_mu, copy=True)
         )
+        __lbd_sig /= __lbd_sig.sum(1)[:, np.newaxis]
 
         model = gp.Model("Facility Location Problem")
         # Define decision variables
@@ -564,8 +570,11 @@ class BASSolver(Solver):
     # The following comment is for using confusing variable names like J, I,
     # etc. without being harassed by flake8.
     # flake8: noqa: E741
-    @deprecated("Deprecated inner function: don't need to convert variables")
     def _cvn(self, flp: FLP):
+        warnings.warn(
+            "Deprecated inner function: don't need to convert variables",
+            DeprecationWarning,
+        )
         """
         Convert notations to the ones used in the referenced article.
         """
