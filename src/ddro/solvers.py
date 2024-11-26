@@ -66,6 +66,14 @@ class BASSolver(Solver):
         Number of possible locations for building facilities.
     nc : int
         Number of costumer sites.
+    delt1_upper : float
+        An upper bound on the dual variable delta_1. See [1].
+    delt2_upper : float
+        An upper bound on the dual variable delta_2. See [2].
+    gam1_upper : float
+        An upper bound on the dual variable gamma_1. See [1].
+    gam2_upper : float
+        An upper bound on the dual variable gamma_2. See [2].
 
     References
     ----------
@@ -87,6 +95,10 @@ class BASSolver(Solver):
         lbd_sig: Optional[np.ndarray] = None,
         nf: Optional[int] = None,
         nc: Optional[int] = None,
+        delt1_upper: Optional[float] = 100000,
+        delt2_upper: Optional[float] = 100000,
+        gam1_upper: Optional[float] = 100000,
+        gam2_upper: Optional[float] = 100000,
     ):
         """
         Initiate a BASSolver object with respect to hyperparameters.
@@ -137,6 +149,10 @@ class BASSolver(Solver):
         self.eps_lower_sig = eps_lower_sig if eps_lower_sig is not None else 1
         self.eps_upper_sig = eps_upper_sig if eps_upper_sig is not None else 1
         self.lbd_sig = lbd_sig
+        self.delt1_upper = delt1_upper
+        self.delt2_upper = delt2_upper
+        self.gam1_upper = gam1_upper
+        self.gam2_upper = gam2_upper
 
 
     @property
@@ -162,6 +178,54 @@ class BASSolver(Solver):
         if value <= 0:
             raise ValueError("'nc' must be strictly positive")
         self._nc = value
+
+    @property
+    def delt1_upper(self):
+        return self._delt1_upper
+
+    @delt1_upper.setter
+    def delt1_upper(self, value):
+        if type(value) is not float or type(value) is not int:
+            raise TypeError("'delt1_upper' must be a float or a int")
+        if value <= 0:
+            raise ValueError("'delt1_upper' mustbe strictly positive")
+        self._delt1_upper = value
+
+    @property
+    def delt2_upper(self):
+        return self._delt2_upper
+
+    @delt2_upper.setter
+    def delt2_upper(self, value):
+        if type(value) is not float or type(value) is not int:
+            raise TypeError("'delt2_upper' must be a float or a int")
+        if value <= 0:
+            raise ValueError("'delt2_upper' mustbe strictly positive")
+        self._delt2_upper = value
+
+    @property
+    def gam1_upper(self):
+        return self._gam1_upper
+
+    @gam1_upper.setter
+    def gam1_upper(self, value):
+        if type(value) is not float or type(value) is not int:
+            raise TypeError("'gam1_upper' must be a float or a int")
+        if value <= 0:
+            raise ValueError("'gam1_upper' mustbe strictly positive")
+        self._gam1_upper = value
+
+    @property
+    def gam2_upper(self):
+        return self._gam2_upper
+
+    @gam2_upper.setter
+    def gam2_upper(self, value):
+        if type(value) is not float or type(value) is not int:
+            raise TypeError("'gam2_upper' must be a float or a int")
+        if value <= 0:
+            raise ValueError("'gam2_upper' mustbe strictly positive")
+        self._gam2_upper = value
 
     @property
     def mu_bar(self):
@@ -271,9 +335,38 @@ class BASSolver(Solver):
     # etc. without being harassed by flake8.
     # flake8: noqa: E741
     def solve(self, flp: FLP) -> bool:
-        J, I, f, c, C, xi, r, p = self._cvn(flp)
-        # TODO: To implement
-        pass
+        __lbd_mu = (
+            self.lbd_mu if self.lbd_mu is not None else np.exp(-flp.tc.T / 25)
+        )
+        __lbd_sig = (
+            self.lbd_sig if self.lbd_sig is not None
+            else np.array(__lbd_mu, copy=True)
+        )
+
+
+    def _m1_constraints(w, eta, z, lower, upper):
+        return [
+            eta - (1 - z) * upper <= w,
+            w <= eta - lower * (1 - z),
+            lower * z <= w,
+            w <= upper * z
+        ]
+
+
+    def _m2_constraints(w, eta, z1, z2, lower, upper):
+        return [
+            w <= upper * z1,
+            w <= upper * z2,
+            w <= eta - lower * (1 - z1),
+            w <= eta - lower * (1 - z2),
+            w >= lower * (-1 + z1 + z2),
+            w >= eta + upper * (-2 + z1 + z2),
+            z1 <= 1, # Maybe remove 4 lines
+            z2 <= 1,
+            lower <= eta,
+            eta <= upper
+        ]
+        
 
     @deprecated("Deprecated inner function: don't need to convert variables")
     def _cvn(self, flp: FLP):
