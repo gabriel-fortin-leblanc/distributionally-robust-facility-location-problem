@@ -4,6 +4,16 @@ import pytest
 from ddro import pg, solvers
 
 
+class PSolver:
+
+    @pytest.mark.slow
+    def test_solve(self):
+        flp = pg.flp_generator()
+        solver = solvers.PSolver()
+        solver.solve(flp)
+        assert type(solver.y) is np.ndarray
+
+
 class TestBASSolver:
 
     def test_init_default(self):

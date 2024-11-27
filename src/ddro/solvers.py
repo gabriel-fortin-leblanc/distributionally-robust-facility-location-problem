@@ -48,6 +48,14 @@ class PSolver(Solver):
     def solve(self, flp: FLP) -> bool:
         model = gp.Model()
         y = model.addMVar(flp.nf, vtype=GRB.BINARY)
+        x = model.addMVar((flp.nf, flp.nc))
+        model.setObjective(flp.oc @ y + (flp.tc * x).sum())
+        model.addConstr(x.sum(0) == 1)
+        model.addConstr(x >= 0)
+        model.addConstrs(x[:, j] <= y for j in range(self.nc))
+        model.optimize()
+        self.y = y.x
+        return True
 
 
 class BASSolver(Solver):
@@ -559,6 +567,7 @@ class BASSolver(Solver):
 
         model.optimize()
         self.y = y.x
+        return True
 
     def _m1_constraints(self, w, eta, z, lower, upper):
         return [
