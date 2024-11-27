@@ -37,6 +37,19 @@ class Solver(ABC):
         raise NotImplementedError("solve is not implemented")
 
 
+class PSolver(Solver):
+    """
+    A plain (non-robust) solver for the FLP
+    """
+
+    def __init__(self):
+        pass
+
+    def solve(self, flp: FLP) -> bool:
+        model = gp.Model()
+        y = model.addMVar(flp.nf, vtype=GRB.BINARY)
+
+
 class BASSolver(Solver):
     """
     Implementation of the Basciftci, Ahmed and Shen solver from
@@ -68,13 +81,13 @@ class BASSolver(Solver):
         Number of possible locations for building facilities.
     nc : int
         Number of costumer sites.
-    self.delt1_upper : float
+    delt1_upper : float
         An upper bound on the dual variable delta_1. See [1].
-    self.delt2_upper : float
+    delt2_upper : float
         An upper bound on the dual variable delta_2. See [2].
-    self.gam1_upper : float
+    gam1_upper : float
         An upper bound on the dual variable gamma_1. See [1].
-    self.gam2_upper : float
+    gam2_upper : float
         An upper bound on the dual variable gamma_2. See [2].
 
     References
@@ -353,13 +366,15 @@ class BASSolver(Solver):
         __lbd_mu = (
             self.lbd_mu if self.lbd_mu is not None else np.exp(-flp.tc.T / 25)
         )
-        __lbd_mu /= __lbd_mu.sum(1)[:, np.newaxis]
+        tmp = __lbd_mu.sum(1)
+        __lbd_mu[tmp > 0] /= tmp[tmp > 0, np.newaxis]
         __lbd_sig = (
             self.lbd_sig
             if self.lbd_sig is not None
             else np.array(__lbd_mu, copy=True)
         )
-        __lbd_sig /= __lbd_sig.sum(1)[:, np.newaxis]
+        tmp = __lbd_sig.sum(1)
+        __lbd_sig[tmp > 0] /= __lbd_sig.sum(1)[tmp > 0, np.newaxis]
 
         model = gp.Model("Facility Location Problem")
         # Define decision variables
@@ -587,3 +602,104 @@ class BASSolver(Solver):
         r = flp.rc
         p = flp.pc
         return (J, I, f, c, C, xi, r, p)
+
+
+class DRSolver(BASSolver):
+    """
+    Implementation of a plain distributionally robust solver. It uses the
+    `BASSolver` with the 'lbds' hyperparameters to 0.
+
+    Attributes
+    ----------
+    mu_bar : array-like[nc]
+        Factor from decision variable `y` for computing the 'mean' of
+        expected values of the uncertainty set.
+    eps_mu : array-like[nc]
+        Upper bound on the difference between expected values and the
+        'mean' of expected values on the uncertainty set.
+    sig_bar : array-like[nc]
+        Factor from decision variable `y` for computing the 'mean' of
+        variances of the uncertainty set.
+    eps_lower_sig : array-like[nc]
+        Lower bound on the second moments of the uncertainty set.
+    eps_upper_sig : array-like[nc]
+        Upper bound on the second moments of the uncertainty set.
+    nf : int
+        Number of possible locations for building facilities.
+    nc : int
+        Number of costumer sites.
+    delt1_upper : float
+        An upper bound on the dual variable delta_1. See [1].
+    delt2_upper : float
+        An upper bound on the dual variable delta_2. See [2].
+    gam1_upper : float
+        An upper bound on the dual variable gamma_1. See [1].
+    gam2_upper : float
+        An upper bound on the dual variable gamma_2. See [2].
+
+    References
+    ----------
+    [1] Basciftci, B., Ahmed, S., & Shen, S. (2021). Distributionally robust
+    facility location problem under decision-dependent stochastic demand.
+    European Journal of Operational Research, 292(2), 548–561.
+    https://doi.org/10.1016/j.ejor.2020.11.002
+    """
+
+    def __init__(
+        self,
+        mu_bar: Optional[np.ndarray] = None,
+        eps_mu: Optional[np.ndarray] = None,
+        sig_bar: Optional[np.ndarray] = None,
+        eps_lower_sig: Optional[np.ndarray] = None,
+        eps_upper_sig: Optional[np.ndarray] = None,
+        nf: Optional[int] = None,
+        nc: Optional[int] = None,
+        delt1_upper: Optional[float] = 100000,
+        delt2_upper: Optional[float] = 100000,
+        gam1_upper: Optional[float] = 100000,
+        gam2_upper: Optional[float] = 100000,
+    ):
+        """
+        Initiate a DRSolver object with respect to hyperparameters.
+
+        Parameters
+        ----------
+        mu_bar : array-like[nc], optional
+            Factor from decision variable `y` for computing the 'mean' of
+            expected values of the uncertainty set. Default: Uniform over
+            [20, 40).
+        eps_mu : array-like[nc], optional
+            Upper bound on the difference between expected values and the
+            'mean' of expected values on the uncertainty set. Default: 0.
+        sig_bar : array-like[nc], optional
+            Factor from decision variable `y` for computing the 'mean' of
+            variances of the uncertainty set. Default: Equals to `mu_bar`.
+        eps_lower_sig : array-like[nc], optional
+            Lower bound on the second moments of the uncertainty set.
+            Default: 1.
+        eps_upper_sig : array-like[nc], optional
+            Upper bound on the second moments of the uncertainty set.
+            Default: 1.
+        nf : int, optional
+            Number of possible locations for building facilities. Default: 10.
+        nc : int, optional
+            Number of costumer sites. Default: 20.
+        """
+        super(DRSolver, self).__init__(
+            mu_bar=mu_bar,
+            eps_mu=eps_mu,
+            sig_bar=sig_bar,
+            eps_lower_sig=eps_lower_sig,
+            eps_upper_sig=eps_upper_sig,
+            nf=nf,
+            nc=nc,
+            delt1_upper=delt1_upper,
+            delt2_upper=delt2_upper,
+            gam1_upper=gam1_upper,
+            gam2_upper=gam2_upper,
+        )
+        self.lbd_mu = np.zeros((self.nc, self.nf))
+        self.lbd_sig = np.zeros_like(self.lbd_mu)
+
+    def solve(self, flp: FLP) -> bool:
+        return super().solve(flp)
