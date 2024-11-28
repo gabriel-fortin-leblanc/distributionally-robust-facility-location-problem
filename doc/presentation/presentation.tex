@@ -135,9 +135,118 @@
 	
 	\section{Thight the constraints for better convergence} % Mohammad ~ 4 min.
 	\begin{frame}
-		% TODO: Describe the new valid contraints
+		What are valid inequalities?\\
+		Using problem structure to derive stronger reformulation.\\
+
+		\begin{figure}[h]
+			\centering
+			\includegraphics[width=0.6\textwidth]{../figure/valid_ineq.png}
+			\caption{Illustration of valid inequalities}
+			\label{fig:sample-image}
+		\end{figure}
 	\end{frame}
 	
+	\subsection{valid inequalities for faster convergence}
+	\begin{frame}
+		\begin{equation}
+			\begin{aligned}
+			&\begin{aligned}
+			\min _{\alpha_j, \delta_j, \delta_j^2, \gamma_j^1, \gamma_j^2} \alpha_j & +\delta_j^1\left(\mu_j(y)+\epsilon_j^\mu\right)-\delta_j^2\left(\mu_j(y)-\epsilon_j^\mu\right)+\gamma_j^1\left(\sigma_j^2(y)\right. \\
+			& \left.+\left(\mu_j(y)\right)^2\right) \bar{\epsilon}_j^\sigma-\gamma_j^2\left(\sigma_j^2(y)+\left(\mu_j(y)\right)^2\right) \underline{\epsilon}_j^\sigma
+			\end{aligned}\\
+			\text { s.t. } \quad &\alpha_j+\left(\delta_j^1-\delta_j^2\right) \xi_k+\left(\gamma_j^1-\gamma_j^2\right) \xi_k^2 \geq \theta_{j k}(y) \quad k=1, \ldots, K \text {, }\\
+			&\delta_j^1, \gamma_j^1, \delta_j^2, \gamma_j^2 \geq 0
+			\end{aligned}
+			\end{equation}
+	\end{frame}
+
+	\subsection{Extreme Rays}
+	\begin{frame} Let:
+		\begin{equation}
+			\delta_j:=\delta_j^1-\delta_j^2 \text, \gamma_j:=\gamma_j^1-\gamma_j^2
+			\end{equation}
+			Problem's constraints are equivalent to:
+			\begin{equation}
+				\alpha_j+\delta_j \xi_k+\gamma_j \xi_k^2 \geq \theta_{j k}(y) \quad k=1, \ldots, K
+				\end{equation}
+			To identify extreme rays:
+				\begin{equation}
+					\begin{aligned}
+					& \text{For arbitrary: } m, n \in\{1, \ldots, K\} \text{with: } \xi_m<\xi_n\\
+					& \alpha_j+\delta_j \xi_m+\gamma_j \xi_m^2=0 \\
+					& \alpha_j+\delta_j \xi_n+\gamma_j \xi_n^2=0 \\
+					& \alpha_j+\delta_j \xi_k+\gamma_j \xi_k^2 \geq 0 \quad k \in\{1, \ldots, K\} \backslash\{m, n\}
+					\end{aligned}
+				\end{equation}
+				Solution:
+				\begin{equation}
+					\begin{aligned}
+					& \delta_j= -(\xi_m+\xi_n)\gamma_j \\
+					& \alpha_j=\xi_m\xi_n\gamma_j\\
+					\end{aligned}
+				\end{equation}
+		\end{frame}	
+
+		\subsection{Extreme Rays}
+		\begin{frame} Let:
+			\begin{equation}
+				\begin{aligned}
+				& \delta_j= -(\xi_m+\xi_n)\gamma_j \\
+				& \alpha_j=\xi_m\xi_n\gamma_j\\
+				\end{aligned}
+			\end{equation}
+If $\gamma=1$:\\
+\quad$(\xi_k - \xi_m)(\xi_k-\xi_n)\geq0 \quad k \in\{1, \ldots, K\} \backslash\{m, n\}$\\
+\quad equivalent to :$\xi_k\geq\xi_m \text{or} \xi_k\geq\xi_n$\\
+Extreme rays generator:
+\begin{equation}
+	\begin{aligned}
+	& \left(\alpha_j, \delta_j, \gamma_j\right): \\
+	& \cdot\left(\xi_{(1)} \xi_{(2)},-\left(\xi_{(1)}+\xi_{(2)}\right), 1\right) \\
+	& \cdot\left(\xi_{(K-1)} \xi_{(K)},-\left(\xi_{(K-1)}+\xi_{(K)}\right), 1\right)
+	\end{aligned}
+\end{equation}
+
+
+If $\gamma=-1$:\\
+\quad$(\xi_k - \xi_m)(\xi_k-\xi_n)\leq0 \quad k \in\{1, \ldots, K\} \backslash\{m, n\}$\\
+\quad equivalent to : $\xi_m\leq\xi_k\leq\xi_n$
+
+Extreme rays generator:\\
+\begin{equation}
+	\left(-\xi_{(1)} \xi_{(K)}, \xi_{(1)}+\xi_{(K)},-1\right)
+	\end{equation}
+			\end{frame}	
+
+			\subsection{Valid inequalities}
+			\begin{frame}
+				\begin{equation}
+					\begin{aligned}
+					& \xi_{(1)} \xi_{(2)}-\left(\xi_{(1)}+\xi_{(2)}\right)\left(\mu_j(y)-\epsilon_j^\mu\right)+\left(\sigma_j^2(y)+\left(\mu_j(y)\right)^2\right) \bar{\epsilon}_j^\sigma \\
+					& \geq 0 \quad \forall j \in J \\
+					& \xi_{(K-1)} \xi_{(K)}-\left(\xi_{(K-1)}+\xi_{(K)}\right)\left(\mu_j(y)-\epsilon_j^\mu\right)+\left(\sigma_j^2(y)+\left(\mu_j(y)\right)^2\right) \bar{\epsilon}_j^\sigma \\
+					& \geq 0 \quad \forall j \in J \\
+					& -\xi_{(1)} \xi_{(K)}+\left(\xi_{(1)}+\xi_{(K)}\right)\left(\mu_j(y)+\epsilon_j^\mu\right)-\left(\sigma_j^2(y)+\left(\mu_j(y)\right)^2\right) \underline{\epsilon}_j^\sigma \\
+					& \geq 0 \quad \forall j \in J
+					\end{aligned}
+					\end{equation}
+				\end{frame}	
+
+				\subsection{McCormick envelopes to linearize Valid inequalities}
+				\begin{frame}
+					\begin{equation}
+						\begin{aligned}
+						&\xi_{(1)} \xi_{(2)}-\left(\xi_{(1)}+\xi_{(2)}\right)\left(\bar{\mu}_j\left(1+\sum_i \lambda_{j i}^\mu y_i\right)-\epsilon_j^\mu\right)+\Theta_j \bar{\epsilon}_j^\sigma \geq 0 \quad \forall j \in J
+						& \xi_{(K-1)} \xi_{(K)}-\left(\xi_{(K-1)}+\xi_{(K)}\right)\left(\bar{\mu}_j\left(1+\sum_{i^{\prime} \in I} \lambda_{j i^{\prime}}^\mu y_{i^{\prime}}\right)-\epsilon_j^\mu\right)+\Theta_j \bar{\epsilon}_j^\sigma \\
+						& \quad \geq 0 \quad \forall j \in J \\
+						& -\xi_{(1)} \xi_{(K)}+\left(\xi_{(1)}+\xi_{(K)}\right)\left(\bar{\mu}_j\left(1+\sum_{i^{\prime} \in I} \lambda_{j i^{\prime}}^\mu y_{i^{\prime}}\right)+\epsilon_j^\mu\right)-\Theta_j \epsilon_j^\sigma \\
+						& \quad \geq 0 \quad \forall j \in J \\
+						& \Theta_j=\bar{\sigma}_j^2+\bar{\mu}_j^2+\sum_{i^{\prime} \in I} \Lambda_{j i^{\prime}} y_{i^{\prime}}+2 \bar{\mu}_j^2 \sum_{l=1}^{|l|} \sum_{m=1}^{l-1} \lambda_{j l}^\mu \lambda_{j m}^\mu Y_{l m} \quad \forall j \in J \\
+						& \left(Y_{l m}, y_l, y_m\right) \in M_{(0,1)}^{\prime} \quad \forall l=1, \ldots,|I|, l>m .
+							\end{aligned}
+							\end{equation}
+					\end{frame}	
+
 	\section{Experiments} % Mohammad ~ 3 min.
 	\begin{frame}
 		% TODO: Present the results of the experiment
