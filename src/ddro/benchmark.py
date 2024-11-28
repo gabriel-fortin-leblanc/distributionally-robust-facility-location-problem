@@ -47,7 +47,6 @@ def benchmark(
             raise ValueError("'ys' must be of at most two dimensions")
     else:
         raise TypeError("'ys' must be a Numpy array or a list of Numpy array")
-    print(ys.shape)
     if ys.ndim == 1:
         ys = ys.reshape((1, -1))
         ny = 1
