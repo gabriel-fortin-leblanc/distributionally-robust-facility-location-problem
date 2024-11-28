@@ -2,7 +2,11 @@
 *.out
 *.aux
 *.log
-doc/*.pdf
+doc/proposal/*.pdf
+doc/presentation/*.pdf
+*.nav
+*.snm
+*.toc
 *.synctex.gz
 *.bbl
 *.blg

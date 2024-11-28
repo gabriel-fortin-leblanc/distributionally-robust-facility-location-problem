@@ -15,6 +15,13 @@ class Solver(ABC):
     decision variables and a function `solve` that solve the problem.
     """
 
+    @abstractmethod
+    def solve(flp: FLP) -> bool:
+        """
+        Solve the problem `flp` and return a boolean depending on the success.
+        """
+        raise NotImplementedError("solve is not implemented")
+
     @property
     def y(self):
         if not hasattr(self, "_y"):
@@ -28,13 +35,44 @@ class Solver(ABC):
         if type(value) is not np.ndarray:
             raise TypeError("'y' must be a Numpy array.")
         self._y = value
+        self._y[self._y < 0] = 0
 
-    @abstractmethod
-    def solve(flp: FLP) -> bool:
+    @property
+    def obj(self):
+        if not hasattr(self, "_obj"):
+            raise AttributeError(
+                "'obj' does not exist. Must solve problem first."
+            )
+        return self._obj
+
+    @obj.setter
+    def obj(self, value):
+        if type(value) is not float:
+            raise TypeError("'obj' must be a float")
+        self._obj = value
+
+
+class PSolver(Solver):
+    """
+    A plain (non-robust) solver for the FLP. It has no hyperparameters.
+    """
+
+    def solve(self, flp: FLP) -> bool:
         """
         Solve the problem `flp` and return a boolean depending on the success.
         """
-        raise NotImplementedError("solve is not implemented")
+        model = gp.Model()
+        y = model.addMVar(flp.nf, vtype=GRB.BINARY)
+        x = model.addMVar((flp.nf, flp.nc))
+        model.setObjective(flp.oc @ y + (flp.tc * x).sum())
+        model.addConstr(x.sum(0) == 1)
+        model.addConstr(x >= 0)
+        model.addConstrs(x[:, j] <= y for j in range(flp.nc))
+        model.optimize()
+
+        self.y = y.x
+        self.obj = model.objVal
+        return True
 
 
 class BASSolver(Solver):
@@ -68,13 +106,13 @@ class BASSolver(Solver):
         Number of possible locations for building facilities.
     nc : int
         Number of costumer sites.
-    self.delt1_upper : float
+    delt1_upper : float
         An upper bound on the dual variable delta_1. See [1].
-    self.delt2_upper : float
+    delt2_upper : float
         An upper bound on the dual variable delta_2. See [2].
-    self.gam1_upper : float
+    gam1_upper : float
         An upper bound on the dual variable gamma_1. See [1].
-    self.gam2_upper : float
+    gam2_upper : float
         An upper bound on the dual variable gamma_2. See [2].
 
     References
@@ -162,183 +200,10 @@ class BASSolver(Solver):
         self.gam1_upper = gam1_upper
         self.gam2_upper = gam2_upper
 
-    @property
-    def nf(self):
-        return self._nf
-
-    @nf.setter
-    def nf(self, value):
-        if type(value) is not int:
-            raise TypeError("'nf' must be a integer")
-        if value <= 0:
-            raise ValueError("'nf' must be strictly positive")
-        self._nf = value
-
-    @property
-    def nc(self):
-        return self._nc
-
-    @nc.setter
-    def nc(self, value):
-        if type(value) is not int:
-            raise TypeError("'nc' must be a integer")
-        if value <= 0:
-            raise ValueError("'nc' must be strictly positive")
-        self._nc = value
-
-    @property
-    def delt1_upper(self):
-        return self._delt1_upper
-
-    @delt1_upper.setter
-    def delt1_upper(self, value):
-        if type(value) is not float and type(value) is not int:
-            raise TypeError("'delt1_upper' must be a float or a int")
-        if value <= 0:
-            raise ValueError("'delt1_upper' mustbe strictly positive")
-        self._delt1_upper = value
-
-    @property
-    def delt2_upper(self):
-        return self._delt2_upper
-
-    @delt2_upper.setter
-    def delt2_upper(self, value):
-        if type(value) is not float and type(value) is not int:
-            raise TypeError("'delt2_upper' must be a float or a int")
-        if value <= 0:
-            raise ValueError("'delt2_upper' mustbe strictly positive")
-        self._delt2_upper = value
-
-    @property
-    def gam1_upper(self):
-        return self._gam1_upper
-
-    @gam1_upper.setter
-    def gam1_upper(self, value):
-        if type(value) is not float and type(value) is not int:
-            raise TypeError("'gam1_upper' must be a float or a int")
-        if value <= 0:
-            raise ValueError("'gam1_upper' mustbe strictly positive")
-        self._gam1_upper = value
-
-    @property
-    def gam2_upper(self):
-        return self._gam2_upper
-
-    @gam2_upper.setter
-    def gam2_upper(self, value):
-        if type(value) is not float and type(value) is not int:
-            raise TypeError("'gam2_upper' must be a float or a int")
-        if value <= 0:
-            raise ValueError("'gam2_upper' mustbe strictly positive")
-        self._gam2_upper = value
-
-    @property
-    def mu_bar(self):
-        return self._mu_bar
-
-    @mu_bar.setter
-    def mu_bar(self, value):
-        if type(value) is not np.ndarray:
-            raise TypeError("'mu_bar' must be a Numpy array")
-        if value.ndim != 1 or np.squeeze(value).ndim != 1:
-            raise ValueError("'mu_bar' must have only one dimension")
-        if value.shape[0] != self.nc:
-            raise ValueError("'mu_bar' must be of size 'nc'")
-        self._mu_bar = value
-
-    @property
-    def eps_mu(self):
-        return self._eps_mu
-
-    @eps_mu.setter
-    def eps_mu(self, value):
-        if type(value) is not np.ndarray:
-            raise TypeError("'self.eps_mu' must be a Numpy array")
-        if value.ndim != 1 or np.squeeze(value).ndim != 1:
-            raise ValueError("'self.eps_mu' must have only one dimension")
-        if value.shape[0] != self.nc:
-            raise ValueError("'self.eps_mu' must be of size 'nc'")
-        self._eps_mu = value
-
-    @property
-    def lbd_mu(self):
-        return self._lbd_mu
-
-    @lbd_mu.setter
-    def lbd_mu(self, value):
-        if value is None:
-            self._lbd_mu = value
-        else:
-            if type(value) is not np.ndarray:
-                raise TypeError("'lbd_mu' must be a Numpy array")
-            if value.ndim != 2 or np.squeeze(value).ndim != 2:
-                raise ValueError("'lbd_mu' must have two dimensions")
-            if value.shape[0] != self.nc or value.shape[1] != self.nf:
-                raise ValueError("'lbd_mu' must be of size ['nc', 'nf']")
-            self._lbd_mu = value
-
-    @property
-    def sig_bar(self):
-        return self._sig_bar
-
-    @sig_bar.setter
-    def sig_bar(self, value):
-        if type(value) is not np.ndarray:
-            raise TypeError("'sig_bar' must be a Numpy array")
-        if value.ndim != 1 or np.squeeze(value).ndim != 1:
-            raise ValueError("'sig_bar' must have only one dimension")
-        if value.shape[0] != self.nc:
-            raise ValueError("'sig_bar' must be of size 'nc'")
-        self._sig_bar = value
-
-    @property
-    def eps_lower_sig(self):
-        return self._eps_lower_sig
-
-    @eps_lower_sig.setter
-    def eps_lower_sig(self, value):
-        if type(value) is not np.ndarray:
-            raise TypeError("'eps_lower_sig' must be a Numpy array")
-        if value.ndim != 1 or np.squeeze(value).ndim != 1:
-            raise ValueError("'eps_lower_sig' must have only one dimension")
-        if value.shape[0] != self.nc:
-            raise ValueError("'eps_lower_sig' must be of size 'nc'")
-        self._eps_lower_sig = value
-
-    @property
-    def eps_upper_sig(self):
-        return self._eps_upper_sig
-
-    @eps_upper_sig.setter
-    def eps_upper_sig(self, value):
-        if type(value) is not np.ndarray:
-            raise TypeError("'eps_upper_sig' must be a Numpy array")
-        if value.ndim != 1 or np.squeeze(value).ndim != 1:
-            raise ValueError("'eps_upper_sig' must have only one dimension")
-        if value.shape[0] != self.nc:
-            raise ValueError("'eps_upper_sig' must be of size 'nc'")
-        self._eps_upper_sig = value
-
-    @property
-    def lbd_sig(self):
-        return self._lbd_sig
-
-    @lbd_sig.setter
-    def lbd_sig(self, value):
-        if value is None:
-            self._lbd_sig = value
-        else:
-            if type(value) is not np.ndarray:
-                raise TypeError("'lbd_sig' must be a Numpy array")
-            if value.ndim != 2 or np.squeeze(value).ndim != 2:
-                raise ValueError("'lbd_sig' must have two dimensions")
-            if value.shape[0] != self.nc or value.shape[1] != self.nf:
-                raise ValueError("'lbd_sig' must be of size ['nc', 'nf']")
-            self._lbd_sig = value
-
     def solve(self, flp: FLP) -> bool:
+        """
+        Solve the problem `flp` and return a boolean depending on the success.
+        """
         if flp.nc != self.nc:
             raise ValueError(
                 "'flp' not compatible. Must have the same"
@@ -353,13 +218,15 @@ class BASSolver(Solver):
         __lbd_mu = (
             self.lbd_mu if self.lbd_mu is not None else np.exp(-flp.tc.T / 25)
         )
-        __lbd_mu /= __lbd_mu.sum(1)[:, np.newaxis]
+        tmp = __lbd_mu.sum(1)
+        __lbd_mu[tmp > 0] /= tmp[tmp > 0, np.newaxis]
         __lbd_sig = (
             self.lbd_sig
             if self.lbd_sig is not None
             else np.array(__lbd_mu, copy=True)
         )
-        __lbd_sig /= __lbd_sig.sum(1)[:, np.newaxis]
+        tmp = __lbd_sig.sum(1)
+        __lbd_sig[tmp > 0] /= __lbd_sig.sum(1)[tmp > 0, np.newaxis]
 
         model = gp.Model("Facility Location Problem")
         # Define decision variables
@@ -544,6 +411,184 @@ class BASSolver(Solver):
 
         model.optimize()
         self.y = y.x
+        self.obj = model.objVal
+        return True
+
+    @property
+    def nf(self):
+        return self._nf
+
+    @nf.setter
+    def nf(self, value):
+        if type(value) is not int:
+            raise TypeError("'nf' must be a integer")
+        if value <= 0:
+            raise ValueError("'nf' must be strictly positive")
+        self._nf = value
+
+    @property
+    def nc(self):
+        return self._nc
+
+    @nc.setter
+    def nc(self, value):
+        if type(value) is not int:
+            raise TypeError("'nc' must be a integer")
+        if value <= 0:
+            raise ValueError("'nc' must be strictly positive")
+        self._nc = value
+
+    @property
+    def delt1_upper(self):
+        return self._delt1_upper
+
+    @delt1_upper.setter
+    def delt1_upper(self, value):
+        if type(value) is not float and type(value) is not int:
+            raise TypeError("'delt1_upper' must be a float or a int")
+        if value <= 0:
+            raise ValueError("'delt1_upper' mustbe strictly positive")
+        self._delt1_upper = value
+
+    @property
+    def delt2_upper(self):
+        return self._delt2_upper
+
+    @delt2_upper.setter
+    def delt2_upper(self, value):
+        if type(value) is not float and type(value) is not int:
+            raise TypeError("'delt2_upper' must be a float or a int")
+        if value <= 0:
+            raise ValueError("'delt2_upper' mustbe strictly positive")
+        self._delt2_upper = value
+
+    @property
+    def gam1_upper(self):
+        return self._gam1_upper
+
+    @gam1_upper.setter
+    def gam1_upper(self, value):
+        if type(value) is not float and type(value) is not int:
+            raise TypeError("'gam1_upper' must be a float or a int")
+        if value <= 0:
+            raise ValueError("'gam1_upper' mustbe strictly positive")
+        self._gam1_upper = value
+
+    @property
+    def gam2_upper(self):
+        return self._gam2_upper
+
+    @gam2_upper.setter
+    def gam2_upper(self, value):
+        if type(value) is not float and type(value) is not int:
+            raise TypeError("'gam2_upper' must be a float or a int")
+        if value <= 0:
+            raise ValueError("'gam2_upper' mustbe strictly positive")
+        self._gam2_upper = value
+
+    @property
+    def mu_bar(self):
+        return self._mu_bar
+
+    @mu_bar.setter
+    def mu_bar(self, value):
+        if type(value) is not np.ndarray:
+            raise TypeError("'mu_bar' must be a Numpy array")
+        if value.ndim != 1 or np.squeeze(value).ndim != 1:
+            raise ValueError("'mu_bar' must have only one dimension")
+        if value.shape[0] != self.nc:
+            raise ValueError("'mu_bar' must be of size 'nc'")
+        self._mu_bar = value
+
+    @property
+    def eps_mu(self):
+        return self._eps_mu
+
+    @eps_mu.setter
+    def eps_mu(self, value):
+        if type(value) is not np.ndarray:
+            raise TypeError("'self.eps_mu' must be a Numpy array")
+        if value.ndim != 1 or np.squeeze(value).ndim != 1:
+            raise ValueError("'self.eps_mu' must have only one dimension")
+        if value.shape[0] != self.nc:
+            raise ValueError("'self.eps_mu' must be of size 'nc'")
+        self._eps_mu = value
+
+    @property
+    def lbd_mu(self):
+        return self._lbd_mu
+
+    @lbd_mu.setter
+    def lbd_mu(self, value):
+        if value is None:
+            self._lbd_mu = value
+        else:
+            if type(value) is not np.ndarray:
+                raise TypeError("'lbd_mu' must be a Numpy array")
+            if value.ndim != 2 or np.squeeze(value).ndim != 2:
+                raise ValueError("'lbd_mu' must have two dimensions")
+            if value.shape[0] != self.nc or value.shape[1] != self.nf:
+                raise ValueError("'lbd_mu' must be of size ['nc', 'nf']")
+            self._lbd_mu = value
+
+    @property
+    def sig_bar(self):
+        return self._sig_bar
+
+    @sig_bar.setter
+    def sig_bar(self, value):
+        if type(value) is not np.ndarray:
+            raise TypeError("'sig_bar' must be a Numpy array")
+        if value.ndim != 1 or np.squeeze(value).ndim != 1:
+            raise ValueError("'sig_bar' must have only one dimension")
+        if value.shape[0] != self.nc:
+            raise ValueError("'sig_bar' must be of size 'nc'")
+        self._sig_bar = value
+
+    @property
+    def eps_lower_sig(self):
+        return self._eps_lower_sig
+
+    @eps_lower_sig.setter
+    def eps_lower_sig(self, value):
+        if type(value) is not np.ndarray:
+            raise TypeError("'eps_lower_sig' must be a Numpy array")
+        if value.ndim != 1 or np.squeeze(value).ndim != 1:
+            raise ValueError("'eps_lower_sig' must have only one dimension")
+        if value.shape[0] != self.nc:
+            raise ValueError("'eps_lower_sig' must be of size 'nc'")
+        self._eps_lower_sig = value
+
+    @property
+    def eps_upper_sig(self):
+        return self._eps_upper_sig
+
+    @eps_upper_sig.setter
+    def eps_upper_sig(self, value):
+        if type(value) is not np.ndarray:
+            raise TypeError("'eps_upper_sig' must be a Numpy array")
+        if value.ndim != 1 or np.squeeze(value).ndim != 1:
+            raise ValueError("'eps_upper_sig' must have only one dimension")
+        if value.shape[0] != self.nc:
+            raise ValueError("'eps_upper_sig' must be of size 'nc'")
+        self._eps_upper_sig = value
+
+    @property
+    def lbd_sig(self):
+        return self._lbd_sig
+
+    @lbd_sig.setter
+    def lbd_sig(self, value):
+        if value is None:
+            self._lbd_sig = value
+        else:
+            if type(value) is not np.ndarray:
+                raise TypeError("'lbd_sig' must be a Numpy array")
+            if value.ndim != 2 or np.squeeze(value).ndim != 2:
+                raise ValueError("'lbd_sig' must have two dimensions")
+            if value.shape[0] != self.nc or value.shape[1] != self.nf:
+                raise ValueError("'lbd_sig' must be of size ['nc', 'nf']")
+            self._lbd_sig = value
 
     def _m1_constraints(self, w, eta, z, lower, upper):
         return [
@@ -587,3 +632,107 @@ class BASSolver(Solver):
         r = flp.rc
         p = flp.pc
         return (J, I, f, c, C, xi, r, p)
+
+
+class DRSolver(BASSolver):
+    """
+    A plain distributionally robust solver. It uses the `BASSolver` with the
+    'lbds' hyperparameters to 0.
+
+    Attributes
+    ----------
+    mu_bar : array-like[nc]
+        Factor from decision variable `y` for computing the 'mean' of
+        expected values of the uncertainty set.
+    eps_mu : array-like[nc]
+        Upper bound on the difference between expected values and the
+        'mean' of expected values on the uncertainty set.
+    sig_bar : array-like[nc]
+        Factor from decision variable `y` for computing the 'mean' of
+        variances of the uncertainty set.
+    eps_lower_sig : array-like[nc]
+        Lower bound on the second moments of the uncertainty set.
+    eps_upper_sig : array-like[nc]
+        Upper bound on the second moments of the uncertainty set.
+    nf : int
+        Number of possible locations for building facilities.
+    nc : int
+        Number of costumer sites.
+    delt1_upper : float
+        An upper bound on the dual variable delta_1. See [1].
+    delt2_upper : float
+        An upper bound on the dual variable delta_2. See [2].
+    gam1_upper : float
+        An upper bound on the dual variable gamma_1. See [1].
+    gam2_upper : float
+        An upper bound on the dual variable gamma_2. See [2].
+
+    References
+    ----------
+    [1] Basciftci, B., Ahmed, S., & Shen, S. (2021). Distributionally robust
+    facility location problem under decision-dependent stochastic demand.
+    European Journal of Operational Research, 292(2), 548–561.
+    https://doi.org/10.1016/j.ejor.2020.11.002
+    """
+
+    def __init__(
+        self,
+        mu_bar: Optional[np.ndarray] = None,
+        eps_mu: Optional[np.ndarray] = None,
+        sig_bar: Optional[np.ndarray] = None,
+        eps_lower_sig: Optional[np.ndarray] = None,
+        eps_upper_sig: Optional[np.ndarray] = None,
+        nf: Optional[int] = None,
+        nc: Optional[int] = None,
+        delt1_upper: Optional[float] = 100000,
+        delt2_upper: Optional[float] = 100000,
+        gam1_upper: Optional[float] = 100000,
+        gam2_upper: Optional[float] = 100000,
+    ):
+        """
+        Initiate a DRSolver object with respect to hyperparameters.
+
+        Parameters
+        ----------
+        mu_bar : array-like[nc], optional
+            Factor from decision variable `y` for computing the 'mean' of
+            expected values of the uncertainty set. Default: Uniform over
+            [20, 40).
+        eps_mu : array-like[nc], optional
+            Upper bound on the difference between expected values and the
+            'mean' of expected values on the uncertainty set. Default: 0.
+        sig_bar : array-like[nc], optional
+            Factor from decision variable `y` for computing the 'mean' of
+            variances of the uncertainty set. Default: Equals to `mu_bar`.
+        eps_lower_sig : array-like[nc], optional
+            Lower bound on the second moments of the uncertainty set.
+            Default: 1.
+        eps_upper_sig : array-like[nc], optional
+            Upper bound on the second moments of the uncertainty set.
+            Default: 1.
+        nf : int, optional
+            Number of possible locations for building facilities. Default: 10.
+        nc : int, optional
+            Number of costumer sites. Default: 20.
+        """
+        super(DRSolver, self).__init__(
+            mu_bar=mu_bar,
+            eps_mu=eps_mu,
+            sig_bar=sig_bar,
+            eps_lower_sig=eps_lower_sig,
+            eps_upper_sig=eps_upper_sig,
+            nf=nf,
+            nc=nc,
+            delt1_upper=delt1_upper,
+            delt2_upper=delt2_upper,
+            gam1_upper=gam1_upper,
+            gam2_upper=gam2_upper,
+        )
+        self.lbd_mu = np.zeros((self.nc, self.nf))
+        self.lbd_sig = np.zeros_like(self.lbd_mu)
+
+    def solve(self, flp: FLP) -> bool:
+        """
+        Solve the problem `flp` and return a boolean depending on the success.
+        """
+        return super().solve(flp)
