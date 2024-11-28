@@ -10,7 +10,7 @@ class PSolver:
     def test_solve(self):
         flp = pg.flp_generator()
         solver = solvers.PSolver()
-        solver.solve(flp)
+        assert solver.solve(flp)
         assert type(solver.y) is np.ndarray
 
 
@@ -34,7 +34,7 @@ class TestBASSolver:
     def test_solve(self):
         flp = pg.flp_generator()
         solver = solvers.BASSolver()
-        solver.solve(flp)
+        assert solver.solve(flp)
         assert type(solver.y) is np.ndarray
 
 
@@ -56,5 +56,5 @@ class TestDRSolver:
     def test_solve(self):
         flp = pg.flp_generator()
         solver = solvers.DRSolver()
-        solver.solve(flp)
+        assert solver.solve(flp)
         assert type(solver.y) is np.ndarray
