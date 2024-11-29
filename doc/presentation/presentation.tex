@@ -73,8 +73,31 @@
 		\item $r \in \R_+^{J}$ the revenues
 		\item $p \in \R_+^{J}$ the penalty for not responding to the demand
 	\end{itemize}
+\end{frame}
+
+\subsection{Determistic Problem}
+\begin{frame}[allowframebreaks]
+	The non-robust problem is represented by
+	\begin{subequations}
+		\begin{align*}
+			\min_{y \in \{0, 1\}^{I}} &\quad O^\T y + \sum_{i \in [I]} \sum_{j \in [J]} (t_{ij} - r_j) x_{ij} \\
+			\text{s.t.} &\quad \sum_{j \in [J]} x_{ij} \le C_i y_i, \forall i \in [I]\\
+			&\quad \sum_{i \in [I]} x_{ij} \le \max\{\Dcal\}, \forall j \in [J] \\
+			&\quad x_{ij} \ge 0, \forall i \in [I], j \in [J].
+		\end{align*}
+	\end{subequations}
 	
 	\framebreak
+	\centering
+	\underline{Issues}
+	\begin{itemize}
+		\item Assume that costumer sites sell everything they receive.
+		\item Don't consider the affect of opening facilities over the demand.
+	\end{itemize}
+\end{frame}
+
+\subsection{Robust Counterpart Problem}
+\begin{frame}[allowframebreaks]
 	\begin{definition}[The model\footnote{\tiny Basciftci, B., Ahmed, S., \& Shen, S. (2021). Distributionally robust facility location problem under decision-dependent stochastic demand. European Journal of Operational Research, 292(2), 548–561. https://doi.org/10.1016/j.ejor.2020.11.002
 		}]
 		For some value $y \in \{0, 1\}^{I}$, let
@@ -86,6 +109,7 @@
 			\min_{y \in \{0, 1\}^I} \left\{O^\T y + \max_{\pi \in U(y)} \E h(y, d(y))\right\},
 		\end{equation}
 	\end{definition}
+	
 	\framebreak
 	\begin{definition}[The model]
 		where
@@ -99,8 +123,9 @@
 			\end{align}
 		\end{subequations}
 	\end{definition}
-	
-	\framebreak
+\end{frame}
+
+\begin{frame}[allowframebreaks]
 	\begin{definition}[Uncertainty set]
 		The uncertainty set is
 		\begin{equation*}
@@ -115,7 +140,9 @@
 	
 	\framebreak
 	\begin{definition}[Uncertainty set]
-		where
+		where \footnote{\tiny Shaheen, S. A., Cohen, A. P., \& Roberts, J. D. (2006). Carsharing in North America: Market Growth, Current Developments, and Future Potential. Transportation Research Record, 1986(1), 116–124. https://doi.org/10.1177/0361198106198600115
+		\\ Hernández, B., Jiménez, J., \& Martín, M. J. (2010). Customer behavior in electronic commerce: The moderating effect of e-purchasing experience. Advances in Internet Consumer Behavior\& Marketing Strategy, 63(9), 964–971. https://doi.org/10.1016/j.jbusres.2009.01.019
+		}
 		\begin{align*}
 			\mu_j(y) &= \min\left\{\bar{\mu}_j \left(1 + \sum_{i \in [I]} \lambda_{ji}^\mu y_i\right), \mu_j^{\mathrm{UB}}\right\} \\
 			\sigma_j^2(y) &= \max\left\{\bar{\sigma}_j^2 \left(1 + \sum_{i \in [I]} \lambda_{ji}^\sigma y_i\right), (\sigma_j^{\mathrm{LB}})^2\right\}.
@@ -186,7 +213,12 @@
 
 \subsection{Linearized Problem}
 \begin{frame}
-	% TODO
+	\begin{columns}
+		\column{0.6\textwidth}
+		
+		\column{0.4\textwidth}
+		\includegraphics[width=\textwidth]{../figure/mccormick.png}
+	\end{columns}
 \end{frame}
 
 \section{Thight the constraints for better convergence} % Mohammad ~ 4 min.
@@ -309,7 +341,7 @@
 	\begin{columns}
 		\column{0.5\textwidth}
 		\begin{itemize}
-			\item $I = 10$ and $J = 25$
+			\item $I = 10$ and $J = 20$
 			\item $\Dcal = [100]$
 			\item Opening costs $\sim U(5000, 10000)$
 			\item Transportation fees $\propto L_2$-distance

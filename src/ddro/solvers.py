@@ -64,10 +64,10 @@ class PSolver(Solver):
         model = gp.Model()
         y = model.addMVar(flp.nf, vtype=GRB.BINARY)
         x = model.addMVar((flp.nf, flp.nc))
-        model.setObjective(flp.oc @ y + (flp.tc * x).sum())
-        model.addConstr(x.sum(0) == 1)
+        model.setObjective(flp.oc @ y + ((flp.tc - flp.rc[np.newaxis, :]) * x).sum())
         model.addConstr(x >= 0)
-        model.addConstrs(x[:, j] <= y for j in range(flp.nc))
+        model.addConstr(x.sum(0) <= flp.sd.max())
+        model.addConstr(x.sum(1) <= flp.cf * y)
         model.optimize()
 
         self.y = y.x
