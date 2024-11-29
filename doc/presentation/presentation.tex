@@ -214,11 +214,75 @@
 \subsection{Linearized Problem}
 \begin{frame}
 	\begin{columns}
-		\column{0.6\textwidth}
+		\column{0.5\textwidth}
+		McCormick envelope\footnotemark[1]
+		\begin{itemize}
+			\item Gives a ``framework" to replace non linear functions by a variable with constraints
+			\item For bilinear terms and trilinear terms, if only one variable is continuous and the others are binary variable, then the problems are equivalent
+		\end{itemize}
 		
-		\column{0.4\textwidth}
-		\includegraphics[width=\textwidth]{../figure/mccormick.png}
+		\column{0.6\textwidth}
+		\includegraphics[width=\textwidth]{../figure/mccormick.png}\footnotemark[2]
 	\end{columns}
+	\footnotetext[1]{McCormick, G. P. (1976). Computability of global solutions to factorable nonconvex programs: Part I — Convex underestimating problems. Mathematical Programming, 10(1), 147–175. https://doi.org/10.1007/BF01580665}
+	\footnotetext[2]{https://optimization.cbe.cornell.edu/index.php?title=McCormick\_envelopes}
+\end{frame}
+
+\begin{frame}[allowframebreaks]
+	Define the McCormick envelope by
+	\begin{itemize}
+		\item \underline{Bilinear term}: $w = \eta z$, $\eta \in [\underline{\eta}, \overline{\eta}], z \in \{0, 1\}$
+		\begin{equation}\label{eq:mccormick_bi}
+			\begin{split}
+				M'_{(\underline{\eta}, \overline{\eta})} = \Big\{(w, \eta, z) \in \R^3: \eta - (1 - z) \overline{\eta} \le w \\
+				\le \eta - \underline{\eta} (1 - z), \\
+				\underline{\eta}z \le w \le \overline{\eta} z\Big\}
+			\end{split}
+		\end{equation}
+	\end{itemize}
+	
+	\framebreak
+	\begin{itemize}
+		\item \underline{Trilinear term}: $w = \eta z_1 z_2$, $\eta \in [\underline{\eta}, \overline{\eta}], \underline{\eta} \ge 0,  z_1, z_2 \in \{0, 1\}$
+		\begin{equation}\label{eq:mccormick_tri}
+			\begin{split}
+				M''_{(\underline{\eta}, \overline{\eta})} = \Big\{(w, \eta, z_1, z_2) \in \R^4: w \le \overline{\eta}z_1, w \le \overline{\eta}z_2, \\
+				w \le \eta - \underline{\eta} (1 - z_1), w \le \eta - \underline{\eta} (1 - z_2) \\
+				w \ge \underline{\eta} (-1 + z_1 + z_2), \\
+				w \ge \eta + \overline{\eta} (-2 + z_1 + z_2)\Big\}
+			\end{split}
+		\end{equation}
+	\end{itemize}
+	
+	\framebreak
+	\begin{proposition}
+		Changing bilinear terms and trilinear terms by a one-variable term with respect to specified domains leads to same solutions when adding the contraints from $M'$ and $M''$. \footnote{Meyer, C. A., \& Floudas, C. A. (2004). Trilinear Monomials with Positive or Negative Domains: Facets of the Convex and Concave Envelopes. In C. A. Floudas \& P. Pardalos (Eds.), Frontiers in Global Optimization (pp. 327–352). Springer US.
+		}
+	\end{proposition}
+\end{frame}
+
+\begin{frame}[allowframebreaks]
+	\begin{theorem}
+		The Problem \ref{eq:outterproblem} is equivalent to the following MILP
+		\begin{align*}
+			\min \quad& O^\T y + \sum_{j \in [J]}\Big(\alpha_j + \delta_j^1 \left(\mu_j(y) + \varepsilon_j^\mu\right) - \delta_j^2 \left(\mu_j(y) - \varepsilon_j^\mu\right) \\
+			& + \bar{\mu}_j \sum_{i \in [I]} \lambda_{j i} (\Delta_{ji}^1 - \Delta_{ji}^2) + (\bar{\sigma}_j^2 + \bar{\mu}_j^2)(\overline{\varepsilon}_j^\sigma \gamma_j^1 - \underline{\varepsilon}_j^\sigma \gamma_j^2) \\
+			& + \sum_{i \in [I]} \Lambda_{j i} (\overline{\varepsilon}_j^\sigma \Gamma_{ji}^1 -\underline{\varepsilon}_j^\sigma \Gamma_{ji}^2) \\
+			& + 2 \bar{\mu}_j^2 \sum_{l=1}^{I} \sum_{m=1}^{l-1}\lambda_{j l}^\mu \lambda_{j m}^\mu (\overline{\varepsilon}_j^\sigma \Psi_{jlm}^1 - \underline{\varepsilon}_j^\sigma \Psi_{jlm}^2)\Big)
+		\end{align*}
+	\end{theorem}
+	
+	\framebreak
+	\begin{theorem}
+		\begin{align*}
+			\text{s.t.} \quad& \alpha_j + (\delta_j^1 - \delta_j^2) \xi_k + (\gamma_j^1 - \gamma_j^2) \xi_j^2 \ge (t_{i'j} - r_j) \xi_k \\
+			&\qquad \sum_{i \in [I]} C_i y_i (t_{ij} - t_{i'j}), \forall i' \in [I] \cup \{0\}, j \in [J], k \in [K] \\
+			& (\Delta_{ji}^h, \delta_j^h, y_i) \in M'_{(0, \overline{\delta_j^h})}, (\Gamma_{ji}^h, \gamma_j^h, y_i) \in M'_{(0, \overline{\gamma_j^h})}, \\
+			&\qquad \forall j \in [J], i \in [I], h = 1, 2, \\
+			&(\Psi_{jlm}^h, \gamma_j^h, y_l, y_m) \in M''_{(0, \overline{\gamma_j^h})}, \forall j \in [J], l \in [I], m < l \\
+			& y \in \{0, 1\}^I, \delta_j^1, \delta_j^2, \gamma_j^1, \gamma_j^2 \ge 0, \forall j \in [J]
+		\end{align*}
+	\end{theorem}
 \end{frame}
 
 \section{Thight the constraints for better convergence} % Mohammad ~ 4 min.
@@ -361,8 +425,8 @@
 	\includegraphics[width=\textwidth]{../figure/benchmark.png}
 \end{frame}
 
-\section{What more?} % ~ Mohammad 3 min.
-\begin{frame}
+%\section{What more?} % ~ Mohammad 3 min.
+%\begin{frame}
 	% TODO: Present the improvments to come
-\end{frame}
+%\end{frame}
 \end{document}
