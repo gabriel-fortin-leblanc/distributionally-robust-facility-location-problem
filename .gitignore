@@ -4,6 +4,7 @@
 *.log
 doc/proposal/*.pdf
 doc/presentation/*.pdf
+doc/report/*.pdf
 *.nav
 *.snm
 *.toc
