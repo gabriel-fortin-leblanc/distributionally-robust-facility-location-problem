@@ -32,11 +32,18 @@
 	\newpage
 	
 	\section*{Introduction}
-	% TODO: Introduce to the problem.
-	
+Facility location is an important problem in transportation and logistics systems. It involves decisions about where to establish facilities to serve customer demands effectively while minimizing costs. Traditionally, facility location models assume demand is exogenous, fixed, or governed by a known probability distribution. However, in many real-world tasks, customer demand or other parameters of the model is not deterministic. Parameters and demand, specifically, have unknown probability distributions, and we face the ambiguity set over distributions.
+
+Moreover, our decisions create decision-dependent uncertainty. In other words, the uncertainty set is not fixed but dynamic with regarding to the decision. For example, in carsharing services, customer willingness to use the service is affected by the proximity and accessibility of parking locations. Similarly, in supply chain and warehouse planning, service availability can impact demand realizations.
+
+Addressing such decision-dependent demand requires models that account for uncertainty without relying on exact demand distributions. This distribution may not be fully known or data-intensive to estimate. Existing approaches like stochastic programming assume full knowledge of demand distributions but require significant data, may lack robustness, and also have to consider all realization of random variable to optimize an expected value function. Alternatively, robust optimization minimizes worst-case costs over uncertainty sets, but these models can be overly conservative and lead to excessive infrastructure investment, to hedge against outlier worst-case scenario.
+
+This work suggests a distributionally robust optimization (DRO) framework for facility location under decision-dependent demand. DRO leverages partial information about demand, such as its mean and variance or any other parameters that define the distribution, to construct ambiguity sets of potential distributions. This balances robustness and flexibility. This research proposes a two-stage DRO model where demand moments are functions of facility location decisions. By reformulating this problem into a mixed-integer linear programming (MILP) model, it addresses computational challenges and proposes a tractable reformulation. Then, it incorporates valid inequalities to enhance convergence to optimal solution.
+
+This study fills the gap in facility location research by modeling decision-dependent uncertainty in a DRO setting. It highlights the importance of integrating customer behavior and decision impacts into strategic planning to optimize performance under uncertainty.
+
 	\subsection*{Litterature}
-	% TODO: Review of litterature.
-	
+	%
 	\section{Distributionally robust counterpart model}
 	% TODO: Introduce the deterministic model
 	% TODO: Present artguments for using robust optimization
