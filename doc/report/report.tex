@@ -69,9 +69,15 @@
 	However, in many real-world tasks, customer demand or other parameters of the model is not deterministic. Parameters, demand in specific, have unknown probability distributions, and we face ambiguity set over realization of parameters or distributions that these parameters are sampled from.
 
 	For example, in the formulation \ref{eq:deterministic_problem}, the demand might be an unknown random variable. In this case, we can define an ambiguity set that covers scenarios from which random variable can takes value. Alternatively, we can define ambiguity set over distributions that model the demand. 
+	
 	\subsection*{Litterature}
 	% TODO: Review of litterature.
-	
+	\cite{cheng2024distributionally} addresses the capacitated facility location problem with uncertain facility capacity and customer demand. The objective is to minimize total costs while ensuring system reliability. It employs a distributionally robust optimization (DRO) framework with a scenario-wise ambiguity set, reformulated into a mixed-integer linear programming model for practical solutions.
+
+	\cite{liu2023testing} addresses the challenge of locating testing facilities and adjusting their capacity to meet varying demand during pandemics like COVID-19. It proposes a two-phase optimization framework: the first phase involves prepositioning strategies with Lagrangian relaxation, while the second phase dynamically adjusts capacity using adaptive allocation policies.
+
+	\cite{shehadeh2023distributionally} addresses the mobile facility fleet-sizing, routing, and scheduling problem under time-dependent, random demand using two distributionally robust optimization (DRO) models. The models minimize fleet establishment and operational costs, incorporating risk measures (expectation or CVaR) over ambiguous demand distributions. The authors propose a decomposition-based solution and symmetry-breaking constraints, improving computational efficiency and convergence.
+
 	\section{Distributionally robust counterpart model}
 	% Finally, define $d \in \Dcal^J$ the demand of the costumer sites, and to force our model to sell merchandise define $p \in \R_+^J$ the penalty for not completing the demand of one item, such that $p_j > t_{ij}$ for any $i \in [I], j \in [J]$. 
 	\begin{equation}\label{eq:dro_outterproblem}
