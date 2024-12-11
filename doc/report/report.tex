@@ -6,6 +6,8 @@
 \usepackage{amssymb}
 \usepackage{amsfonts}
 
+\usepackage{hyperref}
+
 % My commands
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\N}{\mathbb{N}}
@@ -49,11 +51,26 @@
 	
 	\section*{Introduction}
 	% TODO: Introduce to the problem.
+	% TODO: Why this problem is interesting? Examples with citation.
+	
+	Consider the problem with $J$ costumer sites and $I$ possible location for new facilities. The decision variable is $y \in \{0, 1\}^I$ where for some $i \in [I]$, $y_i = 1$ represents the decision of opening the facility at the location assigned to the index $i$ or not opening the facility if $y_i = 0$. Moreover, other information on those possible sites are available: $O \in \R_+^I$ the opening costs, $C \in \R_+^I$ the capacities and $t \in \R_+^{I \times J}$ the transportation fees for transporting one unit of merchandise from a facility to a costumer site. About those lasts, $r \in \R_+^J$ the revenue for selling one item and $\Dcal = \{\xi_k \in \R_+: k \in [K]\} \subset \R_+^K$ the support for the demand are known. To simplify the notation suppose that $\xi_k < \xi_{k+1}$ for any $k \in [K-1]$ and denote $D = \max \Dcal$. Note that the support of the demand is the same for every costumer sites. The deterministic model is
+	\begin{subequations} \label{eq:deterministic_problem}
+		\begin{align}
+			\min_{y \in \{0, 1\}^I} &\quad O^\T y + \sum_{i \in [I]} \sum_{j \in [J]} (t_{ij} - r_j) x_{ij} \\
+			\text{s.t.} &\quad \sum_{j \in [J]} x_{ij} \le C_i y_i, \quad \forall i \in [I] \\ \label{eq:deterministic_problem:capacity}
+			&\quad \sum_{i \in [I]} x_{ij} \le D, \quad \forall j \in [J] \\ \label{eq:deterministic_problem:demand}
+			&\quad x_{ij} \ge 0, \quad \forall i \in [I], j \in [J]
+		\end{align}
+	\end{subequations}
+	The free variable $x \in \R_+^{I \times J}$ represents the number of items sent from facilities to costumer sites. The Constraint \eqref{eq:deterministic_problem:capacity} impose to not send more merchandise than the capacity of the a facility and the Constraint \eqref{eq:deterministic_problem:demand} impose to not send more merchandise to a costumer site than the maximum demand.
+	
+	% TODO: Explain why robust optimization should be considered.
 	
 	\subsection*{Litterature}
 	% TODO: Review of litterature.
 	
 	\section{Distributionally robust counterpart model}
+	% Finally, define $d \in \Dcal^J$ the demand of the costumer sites, and to force our model to sell merchandise define $p \in \R_+^J$ the penalty for not completing the demand of one item, such that $p_j > t_{ij}$ for any $i \in [I], j \in [J]$. 
 	\begin{equation}\label{eq:dro_outterproblem}
 		\min_{y \in \{0, 1\}^I} \left\{O^\T y + \max_{\pi \in U} \E h(y, d)\right\},
 	\end{equation}
