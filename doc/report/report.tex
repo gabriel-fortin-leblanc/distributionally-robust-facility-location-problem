@@ -52,6 +52,7 @@
 	\section*{Introduction}
 	% TODO: Introduce to the problem.
 	% TODO: Why this problem is interesting? Examples with citation.
+	Facility location is an important problem in transportation and logistics systems. It involves decisions about where to establish facilities to serve customer demands effectively while minimizing costs (\cite{cornuejols1983uncapicitated}). Traditionally, facility location models assume demand is exogenous, fixed, or governed by a known probability distribution.
 	
 	Consider the problem with $J$ costumer sites and $I$ possible location for new facilities. The decision variable is $y \in \{0, 1\}^I$ where for some $i \in [I]$, $y_i = 1$ represents the decision of opening the facility at the location assigned to the index $i$ or not opening the facility if $y_i = 0$. Moreover, other information on those possible sites are available: $O \in \R_+^I$ the opening costs, $C \in \R_+^I$ the capacities and $t \in \R_+^{I \times J}$ the transportation fees for transporting one unit of merchandise from a facility to a costumer site. About those lasts, $r \in \R_+^J$ the revenue for selling one item and $\Dcal = \{\xi_k \in \R_+: k \in [K]\} \subset \R_+^K$ the support for the demand are known. To simplify the notation suppose that $\xi_k < \xi_{k+1}$ for any $k \in [K-1]$ and denote $D = \max \Dcal$. Note that the support of the demand is the same for every costumer sites. The deterministic model is
 	\begin{subequations} \label{eq:deterministic_problem}
@@ -65,7 +66,9 @@
 	The free variable $x \in \R_+^{I \times J}$ represents the number of items sent from facilities to costumer sites. The Constraint \eqref{eq:deterministic_problem:capacity} impose to not send more merchandise than the capacity of the a facility and the Constraint \eqref{eq:deterministic_problem:demand} impose to not send more merchandise to a costumer site than the maximum demand.
 	
 	% TODO: Explain why robust optimization should be considered.
-	
+	However, in many real-world tasks, customer demand or other parameters of the model is not deterministic. Parameters, demand in specific, have unknown probability distributions, and we face ambiguity set over realization of parameters or distributions that these parameters are sampled from.
+
+	For example, in the formulation \ref{eq:deterministic_problem}, the demand might be an unknown random variable. In this case, we can define an ambiguity set that covers scenarios from which random variable can takes value. Alternatively, we can define ambiguity set over distributions that model the demand. 
 	\subsection*{Litterature}
 	% TODO: Review of litterature.
 	
