@@ -83,9 +83,21 @@
 	\subsection*{Litterature}
 	% TODO: Review of litterature.
 	% I was wainting more like a history of this topic!!
-	\cite{cheng_distributionally_2024} addresses the capacitated facility location problem with uncertain facility capacity and customer demand. The objective is to minimize total costs while ensuring system reliability. It employs a distributionally robust optimization (DRO) framework with a scenario-wise ambiguity set, reformulated into a mixed-integer linear programming model for practical solutions.
+	Facility location problem is studied to addresses the question of where to establish a resource that most users can benefit from. The resource can be healthcare facility \cite{ahmadi2017survey} and police stations \cite{borba2022optimizing}.
+	
+	\cite{cornuejols_uncapicitated_1983} started the modeling from deterministic and continue to elaborate how to account uncertainty of parameters. In the following, we discuss papers that address the uncertainty in the problem with robust optimization approaches.
+
+	\cite{cheng_distributionally_2024} addresses the capacitated facility location problem with uncertain facility capacity and customer demand. The objective is to minimize total costs while ensuring system reliability. It employs a \gls{dro} framework with a scenario-wise ambiguity set, reformulated into a mixed-integer linear programming model for practical solutions.
 
 	\cite{shehadeh_distributionally_2023} addresses the mobile facility fleet-sizing, routing, and scheduling problem under time-dependent, random demand using two distributionally robust optimization (DRO) models. The models minimize fleet establishment and operational costs, incorporating risk measures (expectation or CVaR) over ambiguous demand distributions. The authors propose a decomposition-based solution and symmetry-breaking constraints, improving computational efficiency and convergence.
+
+	The optimal decision can itself affect the uncertain parameters. In this setting, integrating decision dependent uncertainty is studied in two approaches. One considers how decisions influence the time of revealing information about uncertainty, while the second approaches, focused on how decision change the underlying distribution.
+
+	As an example of first group, \cite{basciftci2024adaptive} addresses the challenge of balancing flexibility and decision commitment in multistage stochastic programming, where frequent decision revisions are impractical. It introduces adaptive multistage stochastic programming, a novel framework that optimally determines revision times based on the allowed flexibility, combining theoretical insights with a specialized decomposition method for computational efficiency. Through experiments on stochastic lot-sizing and generation expansion planning, the proposed approach demonstrates significant performance improvements by optimizing revision stages, achieving near-flexible outcomes even in constrained settings.
+
+	For the second approach that described the effect of the decision on the ambiguity set, \cite{rahimiandistributionally} addresses a two-stage stochastic program with continuous recourse, where the distribution of random parameters depends on the decisions, modeled using a polyhedral ambiguity set for distributional robustness. The problem is reformulated as a nonconvex two-stage stochastic program, including cases with bilinear constraints or concave objectives, and solved using finitely-convergent, decomposition-based cutting plane algorithms. Computational results demonstrate the method’s application to joint pricing and stocking decisions in a multiproduct newsvendor problem with price-dependent demand.
+	
+	In the next sections we discuss in detail moment-based ambiguity and how decisions can effect parameters of this set, i.e., mean and variance of the distribution, that all possible distributions must be near to them.
 
 	\section{Distributionally robust counterpart model}
 	Under the \gls{dro} scheme, the demand is a random variable. Let $d$ be the demand of the costumer sites with $\Dcal^J$ as support. Define the uncertainty set as the set of possible distributions for $d$,
