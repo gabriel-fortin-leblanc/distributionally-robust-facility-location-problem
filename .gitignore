@@ -13,6 +13,13 @@ doc/report/*.pdf
 *.blg
 *.fls
 *.fdb_latexmk
+*.acn
+*.acr
+*.alg
+*.glg
+*.glo
+*.gls
+*.ist
 
 # Python Environments
 .env
