@@ -69,7 +69,7 @@ class PSolver(Solver):
         )
         model.addConstr(x >= 0)
         model.addConstr(x.sum(0) <= flp.sd.max())
-        model.addConstr(x.sum(1) <= flp.cf * y)
+        model.addConstr(x <= (flp.cf * y)[:, np.newaxis])
         model.optimize()
 
         self.y = y.x
