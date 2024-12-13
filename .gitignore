@@ -4,6 +4,7 @@
 *.log
 doc/proposal/*.pdf
 doc/presentation/*.pdf
+doc/report/*.pdf
 *.nav
 *.snm
 *.toc
@@ -12,6 +13,13 @@ doc/presentation/*.pdf
 *.blg
 *.fls
 *.fdb_latexmk
+*.acn
+*.acr
+*.alg
+*.glg
+*.glo
+*.gls
+*.ist
 
 # Python Environments
 .env
