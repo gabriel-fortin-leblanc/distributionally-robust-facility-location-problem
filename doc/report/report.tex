@@ -284,26 +284,60 @@
 		\end{align}
 	\end{subequations}
 	
-	% TODO: Present the results.
-To illustrate how different models make the decision of opening a facility or not we perform experiments for 10 facilities and 20 customers. Figure \ref{fig:decisions} shows the final decisions. \gls{dddro} open more facilities, in comparision with \gls{dro}, and the deterministic ones.
-
-% TODO: Any reason?
-% The reason for this can be that ...
 
 	\begin{figure}[h!]
 		\includegraphics[width=\textwidth]{../figure/chosen_facility_costumer_site_pos.png}
 		\caption{Optimal decision of different models}
 		\label{fig:decisions}		
 	\end{figure}
-	
-	Figure \ref{fig:comparison}, compares the optimal objective value of different models, and how many units of product, $s$, decision maker have to buy from a third party company and pay $p$ for each unit. We can see \gls{dddro}, has lowest total cost. The result, also algins with unsatisfied demand. This is because $p$ is a high penalty and model decides to open more facilities, and not pay high cost $p$.
 
 	\begin{figure}[h!]
-	\includegraphics[width=\textwidth]{../figure/comparision.png}
-	\caption{Comparison of the performance of different models}
-		\label{fig:comparison}		
-	\end{figure}
+		\includegraphics[width=\textwidth]{../figure/comparision.png}
+		\caption{Comparison of the performance of different models}
+			\label{fig:comparison}		
+		\end{figure}
 
+		% TODO: Present the results.
+		To illustrate how different models make the decision of opening a facility or not we perform experiments for 10 facilities and 20 customers. Figure \ref{fig:decisions} shows the final decisions. \gls{dddro} open more facilities, in comparision with \gls{dro}, and the deterministic ones.
+
+		% TODO: Any reason?
+		% The reason for this can be that ...
+
+	Figure \ref{fig:comparison}, compares the optimal objective value of different models, and how many units of product, $s$, decision maker have to buy from a third party company and pay $p$ for each unit. We can see \gls{dddro}, has lowest total cost. The result, also algins with unsatisfied demand. This is because $p$ is a high penalty and model decides to open more facilities, and not pay high cost $p$.
+
+
+\section{Further extension}
+
+After discussion with professor of the course, we planed to extend moment based ambiguity in equation\ref{eq:def_dd_BAS_uncertainty_set} to a simple form of polyhedral uncertainty set. After comprehensive literature review for insights, we found \cite{rahimiandistributionally} a new unplished paper. This work extends the moment based ambiguity set to a general polyhedral ambiguity set of the form:
+
+\begin{equation}\label{eq:ext}
+	P(x) := \left\{ p \geq 0 \ \middle| \underbar{p}_\omega \leq \ p_\omega \leq \bar{p}_\omega, \ \sum_{\omega \in [N]} p_\omega g_i(\xi_\omega) \leq \vartheta_i(x), \ i \in [s] \right\},
+	\end{equation}
+	where $g_i(\xi_\omega)$ are measurable functions of the random parameters $\xi_\omega$, and $\vartheta_i(x)$ are decision-dependent parameters.
+
+	A polyhedral ambiguity set \ref{eq:ext} is a general formulation of the ambiguity set based on Wasserstein distance of order 1 as in uncertainty set \ref{eq:wa}, and also a moment-based ambiguity set \ref{eq:mo}.
+
+	\begin{equation}\label{eq:wa}
+		\mathcal{P}(\boldsymbol{x})=\left\{\boldsymbol{p} \geq \mathbf{0} \left\lvert\, \begin{array}{l|l}
+		\exists \boldsymbol{z} \text { s.t. } \sum_{\omega \in[N]} \sum_{\omega^{\prime} \in[N]} z_{\omega \omega^{\prime}}\left\|\boldsymbol{\xi}_\omega-\boldsymbol{\xi}_{\omega^{\prime}}\right\| \leq \tau(\boldsymbol{x}), \quad \sum_{\omega \in[N]} p_\omega=1, \\
+		\sum_{\omega \in[N]} z_{\omega \omega^{\prime}}=p_\omega, \sum_{\omega^{\prime} \in[N]} z_{\omega \omega^{\prime}}=q_\omega, \omega \in[N]
+		\end{array}\right.\right\},
+		\end{equation}
+
+		\begin{equation}\label{eq:mo}
+			\mathcal{P}(\boldsymbol{x})=\left\{\begin{array}{l|l}
+			\boldsymbol{p} \geq \mathbf{0} & \begin{array}{l}
+			\left(1-\tau_1\right) \boldsymbol{\mu}_0(\boldsymbol{x}) \leq \sum_{\omega \in[N]} p_\omega \boldsymbol{\xi}_\omega \leq\left(1+\tau_1\right) \boldsymbol{\mu}_0(\boldsymbol{x}), \\
+			\underline{\tau}_2\left(\boldsymbol{\sigma}_0(\boldsymbol{x})^2+\boldsymbol{\mu}_0(\boldsymbol{x})^2\right) \leq \sum_{\omega \in[N]} p_\omega \boldsymbol{\xi}_\omega^2 \leq \bar{\tau}_2\left(\boldsymbol{\sigma}_0(\boldsymbol{x})^2+\boldsymbol{\mu}_0(\boldsymbol{x})^2\right), \\
+			\sum_{\omega \in[N]} p_\omega=1
+			\end{array}
+			\end{array}\right\},
+			\end{equation}
+
+			An ambiguity set based on Wasserstein distance \ref{eq:wa} includes a decision-dependent radius $\tau(x)$, where $p = [p_1, \ldots, p_N]^\top$ represents the probability distribution, $q = [q_1, \ldots, q_N]^\top$ is the nominal distribution, and $z_{\omega\omega'}$ are auxiliary variables quantifying the transportation cost between scenarios $\xi_\omega$ and $\xi_{\omega'}$. The moment-based ambiguity set \ref{eq:mo} uses $\mu_0(x)$ and $\sigma_0(x)^2$ as decision-dependent mean and variance, with $\tau_1$ and $\tau_2$ controlling allowable deviations of the first- and second-order moments from their empirical values. Both sets ensure probabilities sum to one, $\sum_{\omega \in [N]} p_\omega = 1$, while enforcing scenario constraints through $g_i(\xi_\omega)$ and $\vartheta_i(x)$. 
+			
+			After, reading the paper we didn't find sufficient time to implement it and extend it further. 
+		
 	\newpage
 	\printglossary[type=\acronymtype]
 	
