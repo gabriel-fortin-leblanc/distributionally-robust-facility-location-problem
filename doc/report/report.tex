@@ -95,7 +95,7 @@
 	\begin{equation} \label{eq:def_uncertainty_set}
 		U \subset \left\{\pi \in [0, 1]^{J \times K}: \sum_{k \in [K]} \pi_{jk} = 1, j \in [J]\right\}.
 	\end{equation}
-	and to force our model to sell merchandise, define $p \in \R_+^J$ the penalty for not completing the demand of one item, such that $p_j > t_{ij}$ for any $i \in [I], j \in [J]$. The \gls{dro} problem is
+	let define $p \in \R_+^J$ the penalty for not completing the demand of one item, such that $p_j > t_{ij}$ for any $i \in [I], j \in [J]$. The \gls{dro} problem is
 	\begin{equation}\label{eq:dro_outter_problem}
 		\min_{y \in \{0, 1\}^I} \left\{O^\T y + \max_{\pi \in U} \E h(y, d)\right\},
 	\end{equation}
@@ -103,17 +103,19 @@
 	\begin{subequations} \label{eq:dro_inner_problem}
 		\begin{align}
 			h(y, d) = \min_{x, s} &\quad \sum_{i \in [I]} \sum_{j \in [J]} t_{ij}x_{ij} + \sum_{j \in [J]} (p_j s_j - r_j d_j) \\
-			\text{s.t.} &\quad \sum_{i \in [I]} x_{ij} + s_j = d_j \quad \forall j \in [J] \\ \label{eq:dro_inner_problem:demand}
+			\text{s.t.} &\quad \sum_{i \in [I]} x_{ij} + s_j = d_j \quad \forall j \in [J] \label{eq:dro_inner_problem:demand}\\
 			&\quad x_{ij} \le C_i y_i \quad \forall i \in [I], j \in [J] \\
 			&\quad s_i, x_{ij} \ge 0 \quad \forall i \in [I], j \in [J].
 		\end{align}
 	\end{subequations}
-	The new free variable $s$ represents the number of item not satisfied. The Constraint \eqref{eq:dro_inner_problem:demand} imposes that $s$ is the difference between the demand from costumer sites and the satisfied demand.
+	The new free variable $s$ represents the number of item not satisfied. The Constraint \eqref{eq:dro_inner_problem:demand} imposes that $s$ is the difference between the demand from costumer sites and the transferred cargo.
 	
 	% TODO: Learn and Predict?
 	
-	The decision of opening or not a specific facility may influence the demand. In the case of carsharing, there is a relation between the accessibility and the demand \cite{shaheen_carsharing_2006}.
-	% TODO: Add more sauce to the above paragraph.
+	The decision of opening or not a specific facility may influence the demand. If, customers find more available recourse near them, they probably order that more. A simple example can be Tim Hortons; if students, or even professors, find near branch close to HEC, they would buy it more, but up to some upper bound. In the following, we would discuss how we can model influence of decision on random variable demand.
+	
+	% In the case of carsharing, there is a relation between the accessibility and the demand \cite{shaheen_carsharing_2006}.
+	% % TODO: Add more sauce to the above paragraph.
 	
 	\subsection{Decision-dependant distributionally robust model}
 	Assume from now that the decision affects the demand and from now the uncertainty set depends on the decision. The \gls{dro} problem remains the same except for the uncertainty set. It leads to the \gls{dddro} problem 
@@ -232,7 +234,8 @@
 	\end{theorem}
 	
 	\subsubsection{Tighter constraints}
-	By finding extreme rays, new constraints can be added to Problem \eqref{eq:prob_BAS_milp} to accelerate the convergence of the algorithm.
+
+	In this section we discuss how to exert problem structure to introduce valid inequalities. Valid inequalities are constraints that are added to the problem that restrict the relaxed feasible region, without cutting any feasible integer solution. By finding extreme rays, new constraints can be added to problem \eqref{eq:prob_BAS_milp} to accelerate the convergence of the algorithm.
 	% TODO: Add some sauce. You can explain little bit more about those constraints.
 	
 	\begin{proposition} \label{prop:valid_inequalities}
