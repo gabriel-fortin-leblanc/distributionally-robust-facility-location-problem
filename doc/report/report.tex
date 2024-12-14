@@ -10,6 +10,7 @@
 \usepackage{authblk}
 \usepackage[acronym]{glossaries}
 \usepackage{xcolor}
+\usepackage{graphicx}
 
 \hypersetup{
 	colorlinks,
@@ -284,8 +285,26 @@
 	\end{subequations}
 	
 	% TODO: Present the results.
+To illustrate how different models make the decision of opening a facility or not we perform experiments for 10 facilities and 20 customers. Figure \ref{fig:decisions} shows the final decisions. \gls{dddro} open more facilities, in comparision with \gls{dro}, and the deterministic ones.
 
-	\clearpage
+% TODO: Any reason?
+% The reason for this can be that ...
+
+	\begin{figure}[h!]
+		\includegraphics[width=\textwidth]{../figure/chosen_facility_costumer_site_pos.png}
+		\caption{Optimal decision of different models}
+		\label{fig:decisions}		
+	\end{figure}
+	
+	Figure \ref{fig:comparison}, compares the optimal objective value of different models, and how many units of product, $s$, decision maker have to buy from a third party company and pay $p$ for each unit. We can see \gls{dddro}, has lowest total cost. The result, also algins with unsatisfied demand. This is because $p$ is a high penalty and model decides to open more facilities, and not pay high cost $p$.
+
+	\begin{figure}[h!]
+	\includegraphics[width=\textwidth]{../figure/comparision.png}
+	\caption{Comparison of the performance of different models}
+		\label{fig:comparison}		
+	\end{figure}
+
+	\newpage
 	\printglossary[type=\acronymtype]
 	
 	\clearpage
