@@ -73,7 +73,7 @@
 	Consider the problem with $J$ customer sites and $I$ possible location for new facilities. The decision variable is $y \in \{0, 1\}^I$ where for some $i \in [I]$, $y_i = 1$ represents the decision of opening the facility at the location assigned to the index $i$ or not opening the facility if $y_i = 0$. Moreover, other information on those possible sites are available: $O \in \R_+^I$ the opening costs, $C \in \R_+^I$ the capacities and $t \in \R_+^{I \times J}$ the transportation fees for transporting one unit of merchandise from a facility to a customer site. About those lasts, $r \in \R_+^J$ the revenue for selling one item and $\Dcal = \{\xi_k \in \R_+: k \in [K]\} \subset \R_+^K$ the support for the demand are known. To simplify the notation suppose that $\xi_k < \xi_{k+1}$ for any $k \in [K-1]$ and denote $D = \frac{1}{K} \sum_{k \in [K]} \xi_k$. Note that the support of the demand is the same for every customer sites. The deterministic model is
 	\begin{subequations} \label{eq:deterministic_problem}
 		\begin{align}
-			\min_{y \in \{0, 1\}^I} &\quad O^\T y + \sum_{i \in [I]} \sum_{j \in [J]} t_{ij} x_{ij} + \sum_{j \in [J]} (p_j * s_j - r_j D) \\
+			\min_{y \in \{0, 1\}^I} &\quad O^\T y + \sum_{i \in [I]} \sum_{j \in [J]} t_{ij} x_{ij} + \sum_{j \in [J]} (p_j s_j - r_j D) \\
 			\text{s.t.} &\quad x_{ij} \le C_i y_i, \quad \forall i \in [I] \\ \label{eq:deterministic_problem:capacity}
 			&\quad \sum_{i \in [I]} x_{ij} + s_j = D, \quad \forall j \in [J] \\ \label{eq:deterministic_problem:demand}
 			&\quad x_{ij} \ge 0, \quad \forall i \in [I], j \in [J]
@@ -91,17 +91,13 @@
 	The optimal decision can itself affect the uncertain parameters. In this setting, integrating decision dependent uncertainty is studied in two approaches. One considers how decisions influence the time of revealing information about uncertainty, while the second approaches, focused on how decision change the underlying distribution. As an example of first group, Basciftci et al. address the challenge of balancing flexibility and decision commitment in multistage stochastic programming, where frequent decision revisions are impractical \cite{basciftci2024adaptive}. It introduces adaptive multistage stochastic programming, a novel framework that optimally determines revision times based on the allowed flexibility, combining theoretical insights with a specialized decomposition method for computational efficiency. Through experiments on stochastic lot-sizing and generation expansion planning, the proposed approach demonstrates significant performance improvements by optimizing revision stages, achieving near-flexible outcomes even in constrained settings.
 
 	For the second approach that described the effect of the decision on the ambiguity set, Rahimian and Mehrotra address a two-stage stochastic program with continuous recourse, where the distribution of random parameters depends on the decisions, modeled using a polyhedral ambiguity set for distributional robustness \cite{rahimiandistributionally}. The problem is reformulated as a nonconvex two-stage stochastic program, including cases with bilinear constraints or concave objectives, and solved using finitely-convergent, decomposition-based cutting plane algorithms. Computational results demonstrate the method’s application to joint pricing and stocking decisions in a multiproduct newsvendor problem with price-dependent demand.
-	\cite{shehadeh_distributionally_2023} addresses the mobile facility fleet-sizing, routing, and scheduling problem under time-dependent, random demand using two distributionally robust optimization (DRO) models. The models minimize fleet establishment and operational costs, incorporating risk measures (expectation or CVaR) over ambiguous demand distributions. The authors propose a decomposition-based solution and symmetry-breaking constraints, improving computational efficiency and convergence.
-	
-	\subsection*{Outline and contributions}
-	% TODO
 
 	\section{Distributionally robust counterpart model}
 	Under the \gls{dro} scheme, the demand is a random variable. Let $d$ be the demand of the costumer sites with $\Dcal^J$ as support. Define the uncertainty set as the set of possible distributions for $d$,
 	\begin{equation} \label{eq:def_uncertainty_set}
 		U \subset \left\{\pi \in [0, 1]^{J \times K}: \sum_{k \in [K]} \pi_{jk} = 1, j \in [J]\right\}.
 	\end{equation}
-	and to force our model to sell merchandise, define $p \in \R_+^J$ the penalty for not completing the demand of one item, such that $p_j > t_{ij}$ for any $i \in [I], j \in [J]$. The \gls{dro} problem is
+	let define $p \in \R_+^J$ the penalty for not completing the demand of one item, such that $p_j > t_{ij}$ for any $i \in [I], j \in [J]$. The \gls{dro} problem is
 	\begin{equation}\label{eq:dro_outter_problem}
 		\min_{y \in \{0, 1\}^I} \left\{O^\T y + \max_{\pi \in U} \E h(y, d)\right\},
 	\end{equation}
@@ -109,17 +105,19 @@
 	\begin{subequations} \label{eq:dro_inner_problem}
 		\begin{align}
 			h(y, d) = \min_{x, s} &\quad \sum_{i \in [I]} \sum_{j \in [J]} t_{ij}x_{ij} + \sum_{j \in [J]} (p_j s_j - r_j d_j) \\
-			\text{s.t.} &\quad \sum_{i \in [I]} x_{ij} + s_j = d_j \quad \forall j \in [J] \\ \label{eq:dro_inner_problem:demand}
+			\text{s.t.} &\quad \sum_{i \in [I]} x_{ij} + s_j = d_j \quad \forall j \in [J] \label{eq:dro_inner_problem:demand}\\
 			&\quad x_{ij} \le C_i y_i \quad \forall i \in [I], j \in [J] \\
 			&\quad s_i, x_{ij} \ge 0 \quad \forall i \in [I], j \in [J].
 		\end{align}
 	\end{subequations}
-	The new free variable $s$ represents the number of item not satisfied. The Constraint \eqref{eq:dro_inner_problem:demand} imposes that $s$ is the difference between the demand from costumer sites and the satisfied demand.
+	The new free variable $s$ represents the number of item not satisfied. The Constraint \eqref{eq:dro_inner_problem:demand} imposes that $s$ is the difference between the demand from costumer sites and the transferred cargo.
 	
 	% TODO: Learn and Predict?
 	
-	The decision of opening or not a specific facility may influence the demand. In the case of carsharing, there is a relation between the accessibility and the demand \cite{shaheen_carsharing_2006}.
-	% TODO: Add more sauce to the above paragraph.
+	The decision of opening or not a specific facility may influence the demand. If, customers find more available recourse near them, they probably order that more. A simple example can be Tim Hortons; if students, or even professors, find near branch close to HEC, they would buy it more, but up to some upper bound. In the following, we would discuss how we can model influence of decision on random variable demand.
+	
+	% In the case of carsharing, there is a relation between the accessibility and the demand \cite{shaheen_carsharing_2006}.
+	% % TODO: Add more sauce to the above paragraph.
 	
 	\subsection{Decision-dependant distributionally robust model}
 	Assume from now that the decision affects the demand and from now the uncertainty set depends on the decision. The \gls{dro} problem remains the same except for the uncertainty set. It leads to the \gls{dddro} problem 
@@ -238,7 +236,8 @@
 	\end{theorem}
 	
 	\subsubsection{Tighter constraints}
-	By finding extreme rays, new constraints can be added to Problem \eqref{eq:prob_BAS_milp} to accelerate the convergence of the algorithm.
+
+	In this section we discuss how to exert problem structure to introduce valid inequalities. Valid inequalities are constraints that are added to the problem that restrict the relaxed feasible region, without cutting any feasible integer solution. By finding extreme rays, new constraints can be added to problem \eqref{eq:prob_BAS_milp} to accelerate the convergence of the algorithm.
 	% TODO: Add some sauce. You can explain little bit more about those constraints.
 	
 	\begin{proposition} \label{prop:valid_inequalities}
@@ -266,14 +265,14 @@
 		\item the distribution of the demand is independent of the decision, but is in a specific uncertainty set, \label{sit:ind_unc}
 		\item the distribution of the demand is dependent of the decision and is in a specific uncertainty set, \label{sit:dep_unc}
 	\end{enumerate}
-	on two statistics: the total cost and the unsatisfied demand. A \gls{flp} is randomly generated and will be used throughout all situations. The experiment parameter are mostly taken from Basciftci et al. \cite{basciftci_distributionally_2021}. The generation is as follow:
+	on two statistics: the total cost and the unsatisfied demand. A \gls{flp} is randomly generated and will be used throughout all situations. The experiment parameters are mostly taken from Basciftci et al. \cite{basciftci_distributionally_2021}. The generation is as follows:
 	\begin{enumerate}
-		\item 10 of possible location for facilities and the 20 customer sites position are generated on a grid of $[-10, 10]^2$.
+		\item 10 of the possible location for facilities and the 20 customer site positions are generated on a grid of $[-10, 10]^2$.
 		\item For each facility, the opening cost is randomly generated by a uniform over $[5000, 10000)$.
 		\item For each facility, the capacity is randomly generated by a uniform over $[10, 20)$.
-		\item For each customer sites, the revenue for selling one item is 150.
-		\item For each customer sites, the penalty is 250.
-		\item For each customer sites, the demand support is $\{1, \dots, 100\}$.
+		\item For each customer site, the revenue for selling one item is 150.
+		\item For each customer site, the penalty is 250.
+		\item For each customer site, the demand support is $\{1, \dots, 100\}$.
 		\item For each pair of facilities and customer sites, the transportation cost for moving one item is proportional to the euclidean distance between both, and the factor of proportionality is randomly generated by a uniform over $[2, 3)$.
 	\end{enumerate}
 	
@@ -289,7 +288,7 @@
 		\end{align}
 	\end{subequations}
 	
-	For the Situation \ref{sit:ind_rand}, independently from the decision, a distribution is randomly chosen over all possible distributions. For the Situation \ref{sit:ind_unc}, the mass function is the discretize the probability density function of a gaussian distribution with $\bar{\mu}_j$ and $\bar\sigma^2_j$ as parameters. Finally, the distribution used for Situation \ref{sit:dep_unc} is the same than with Situation \ref{sit:ind_unc} but with $\mu_j(y)$ and $\sigma_j^2(y)$ as parameter. In each case, 250 realizations of demands are used for benchmark the three models. The results are presented in Tables \ref{tab:cost_comparison} \& \ref{tab:unsatisfied_demand_comparison}.
+	For the Situation \ref{sit:ind_rand}, independently of the decision, a distribution is randomly chosen over all possible distributions. For the Situation \ref{sit:ind_unc}, the mass function is the discretization of the probability density function of a Gaussian distribution with $\bar{\mu}_j$ and $\bar\sigma^2_j$ as parameters. Finally, the distribution used for Situation \ref{sit:dep_unc} is the same as with Situation \ref{sit:ind_unc} but with $\mu_j(y)$ and $\sigma_j^2(y)$ as parameter. In each case, 250 realizations of demands are used for benchmark the three models. The results are presented in Tables \ref{tab:cost_comparison} \& \ref{tab:unsatisfied_demand_comparison}.
 	
 	\begin{table}
 		\centering
@@ -334,7 +333,7 @@
 		\label{fig:expected_dddro}
 	\end{figure}
 
-	In any situation, the \gls{dddro} model significantly does better. The simply deterministic model stay close to the \gls{dddro} model, and the \gls{dro} always. We can further analyze the decision of the deterministic model and the \gls{dddro} model. In Figures \ref{fig:expected_deterministic} \& \ref{fig:expected_dddro}, remark that the opened facilities from the \gls{dddro} model are such that the expected value of the demand remains high for most of customer sites, rather than with the deterministic model.
+	In any situation, the \gls{dddro} model significantly does better. The simply deterministic model stay close to the \gls{dddro} model, and the \gls{dro} always. We can further analyze the decision of the deterministic model and the \gls{dddro} model. In Figures \ref{fig:expected_deterministic} \& \ref{fig:expected_dddro}, remark that the opened facilities from the \gls{dddro} model are such that the expected value of the demand remains high for most customer sites, rather than with the deterministic model.
 
 	\clearpage
 	\printglossary[type=\acronymtype]
