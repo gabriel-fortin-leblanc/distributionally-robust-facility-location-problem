@@ -329,36 +329,15 @@
 	In any situation, the \gls{dddro} model significantly does better. The simply deterministic model stay close to the \gls{dddro} model, and the \gls{dro} always. We can further analyze the decision of the deterministic model and the \gls{dddro} model. In Figures \ref{fig:expected_deterministic} \& \ref{fig:expected_dddro}, remark that the opened facilities from the \gls{dddro} model are such that the expected value of the demand remains high for most customer sites, rather than with the deterministic model.
 	
 	\section{Further extension}
-	
-	After discussion with professor of the course, we planed to extend moment based ambiguity in equation\ref{eq:def_dd_BAS_uncertainty_set} to a simple form of polyhedral uncertainty set. After comprehensive literature review for insights, we found \cite{rahimiandistributionally} a new unplished paper. This work extends the moment based ambiguity set to a general polyhedral ambiguity set of the form:
-	
-	\begin{equation}\label{eq:ext}
-		P(x) := \left\{ p \geq 0 \ \middle| \underbar{p}_\omega \leq \ p_\omega \leq \bar{p}_\omega, \ \sum_{\omega \in [N]} p_\omega g_i(\xi_\omega) \leq \vartheta_i(x), \ i \in [s] \right\},
-	\end{equation}
-	where $g_i(\xi_\omega)$ are measurable functions of the random parameters $\xi_\omega$, and $\vartheta_i(x)$ are decision-dependent parameters.
-
-	A polyhedral ambiguity set \ref{eq:ext} is a general formulation of the ambiguity set based on Wasserstein distance of order 1 as in uncertainty set \ref{eq:wa}, and also a moment-based ambiguity set \ref{eq:mo}.
-
-	\begin{equation}\label{eq:wa}
-		\mathcal{P}(\boldsymbol{x})=\left\{\boldsymbol{p} \geq \mathbf{0} \left\lvert\, \begin{array}{l|l}
-		\exists \boldsymbol{z} \text { s.t. } \sum_{\omega \in[N]} \sum_{\omega^{\prime} \in[N]} z_{\omega \omega^{\prime}}\left\|\boldsymbol{\xi}_\omega-\boldsymbol{\xi}_{\omega^{\prime}}\right\| \leq \tau(\boldsymbol{x}), \quad \sum_{\omega \in[N]} p_\omega=1, \\
-		\sum_{\omega \in[N]} z_{\omega \omega^{\prime}}=p_\omega, \sum_{\omega^{\prime} \in[N]} z_{\omega \omega^{\prime}}=q_\omega, \omega \in[N]
-	\end{array}\right.\right\},
-	\end{equation}
-
-	\begin{equation}\label{eq:mo}
-		\mathcal{P}(\boldsymbol{x})=\left\{\begin{array}{l|l}
-		\boldsymbol{p} \geq \mathbf{0} & \begin{array}{l}
-		\left(1-\tau_1\right) \boldsymbol{\mu}_0(\boldsymbol{x}) \leq \sum_{\omega \in[N]} p_\omega \boldsymbol{\xi}_\omega \leq\left(1+\tau_1\right) \boldsymbol{\mu}_0(\boldsymbol{x}), \\
-		\underline{\tau}_2\left(\boldsymbol{\sigma}_0(\boldsymbol{x})^2+\boldsymbol{\mu}_0(\boldsymbol{x})^2\right) \leq \sum_{\omega \in[N]} p_\omega \boldsymbol{\xi}_\omega^2 \leq \bar{\tau}_2\left(\boldsymbol{\sigma}_0(\boldsymbol{x})^2+\boldsymbol{\mu}_0(\boldsymbol{x})^2\right), \\
-		\sum_{\omega \in[N]} p_\omega=1
-		\end{array}
-		\end{array}\right\},
-	\end{equation}
-
-	An ambiguity set based on Wasserstein distance \ref{eq:wa} includes a decision-dependent radius $\tau(x)$, where $p = [p_1, \ldots, p_N]^\top$ represents the probability distribution, $q = [q_1, \ldots, q_N]^\top$ is the nominal distribution, and $z_{\omega\omega'}$ are auxiliary variables quantifying the transportation cost between scenarios $\xi_\omega$ and $\xi_{\omega'}$. The moment-based ambiguity set \ref{eq:mo} uses $\mu_0(x)$ and $\sigma_0(x)^2$ as decision-dependent mean and variance, with $\tau_1$ and $\tau_2$ controlling allowable deviations of the first- and second-order moments from their empirical values. Both sets ensure probabilities sum to one, $\sum_{\omega \in [N]} p_\omega = 1$, while enforcing scenario constraints through $g_i(\xi_\omega)$ and $\vartheta_i(x)$. 
-	
-	After, reading the paper we didn't find sufficient time to implement it and extend it further. 
+	Generalizing the \gls{dddro} model from Basciftci et al. to some polyhedral uncertainty set up to some conditions in relation to the decision variable has recently been made by Rahimian and Mehrotra \cite{rahimian_distributionally_2024}. Their results are based on five assumptions, if applied to our case, are:
+	\begin{enumerate}
+		\item The support of the demand $\Dcal$ is finite.
+		\item For any $y \in \{0, 1\}^I$, there is a $s$ and $x$ that are feasible.
+		\item The uncertainty set $U(y)$ is a polyhedral and is non empty for any $y \in \{0,1\}^I$.
+		\item The uncertainty set $U(y)$ is either non-negative convex or non-positive concave for the decision.
+		\item There exist a stochastic solver for the single-level problem.
+	\end{enumerate}
+	The Assumption 1-4 are readily verified. A lot has to be made for the Assumption 5. Surely, this last assumption hides others to assure the convergence of such a solver. Further research should investigate the application of this generalization to the \gls{flp}.
 	
 	\newpage
 	\printglossary[type=\acronymtype]
