@@ -35,7 +35,8 @@ class Solver(ABC):
         if type(value) is not np.ndarray:
             raise TypeError("'y' must be a Numpy array.")
         self._y = value
-        self._y[self._y < 0] = 0
+        self._y[self._y < 0.3] = 0
+        self._y[self._y > 0.7] = 1
 
     @property
     def obj(self):
@@ -61,13 +62,18 @@ class PSolver(Solver):
         """
         Solve the problem `flp` and return a boolean depending on the success.
         """
+        d = flp.sd.mean()
         model = gp.Model()
         y = model.addMVar(flp.nf, vtype=GRB.BINARY)
         x = model.addMVar((flp.nf, flp.nc))
-        model.setObjective(flp.oc @ y + ((flp.tc - flp.rc[np.newaxis, :]) * x).sum())
+        s = model.addMVar(flp.nc)
+        model.setObjective(
+            flp.oc @ y + (flp.tc * x).sum() + (flp.pc * s - flp.rc * d).sum()
+        )
+        model.addConstr(x.sum(0) + s == d)
+        model.addConstr(x <= (flp.cf * y)[:, np.newaxis])
         model.addConstr(x >= 0)
-        model.addConstr(x.sum(0) <= flp.sd.max())
-        model.addConstr(x.sum(1) <= flp.cf * y)
+        model.addConstr(s >= 0)
         model.optimize()
 
         self.y = y.x
@@ -297,12 +303,17 @@ class BASSolver(Solver):
                     + (flp.cf * y * (flp.tc[:, j] - flp.pc[j])).sum()
                 )
                 for i in range(self.nf):
+                    mask = flp.tc[:, j] < flp.tc[i, j]
                     model.addConstr(
                         alph[j]
                         + (delt1[j] - delt2[j]) * flp.sd[k]
                         + (gam1[j] - gam2[j]) * flp.sd[k] ** 2
                         >= (flp.tc[i, j] - flp.rc[j]) * flp.sd[k]
-                        + (flp.cf * y * (flp.tc[:, j] - flp.tc[i, j])).sum()
+                        + (
+                            flp.cf[mask]
+                            * y[mask]
+                            * (flp.tc[mask, j] - flp.tc[i, j])
+                        ).sum()
                     )
         # Add McCormick envelopes constaints
         for j in range(self.nc):
