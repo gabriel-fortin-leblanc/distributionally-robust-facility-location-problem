@@ -75,9 +75,10 @@ def benchmark(
         model = gp.Model()
         x = model.addMVar((N, flp.nf, flp.nc))
         s = model.addMVar((N, flp.nc))
-        obj = flp.oc @ y
+        obj = N * flp.oc @ y
         obj += (flp.tc[np.newaxis, :, :] * x).sum()
         obj += (flp.pc[np.newaxis, :] * s - flp.rc[np.newaxis, :] * ds).sum()
+        obj /= N
         model.setObjective(obj)
         model.addConstr(x.sum(1) + s == ds)
         model.addConstr(
