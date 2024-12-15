@@ -10,6 +10,7 @@
 \usepackage{authblk}
 \usepackage[acronym]{glossaries}
 \usepackage{xcolor}
+\usepackage{booktabs}
 \usepackage{graphicx}
 
 \hypersetup{
@@ -54,8 +55,8 @@
 % [x] Presentation of the decision problem in its deterministic form
 % [x] Motivation regarding the key uncertainties in this problem
 % [x] Presentation of a robust optimization model
-% [ ] Short review of closely related litterature
-% [ ] Description of the solution scheme (either through reformulation or decomposition methods)
+% [x] Short review of closely related litterature
+% [x] Description of the solution scheme (either through reformulation or decomposition methods)
 % [ ] Presentation of experimental setup
 % [ ] Summary of numerical findings
 % [ ] Improvements?
@@ -69,12 +70,12 @@
 	\section*{Introduction}
 	Facility location is an important problem in transportation and logistics systems. It involves decisions about where to establish facilities to serve customer demands effectively while minimizing costs \cite{cornuejols_uncapicitated_1983}. Traditionally, facility location models assume demand is exogenous, fixed, or governed by a known probability distribution, but the models became more complex to better reflect reality. It has been used for multiple tasks that go further than positioning ``facilities", like positioning fire departments and their vehicles \cite{rodriguez_simulation-optimization_2021}, or even positioning testing facilities for COVID-19 \cite{liu_testing_2023}. The current monograph presents the facility location problem when demand is a random variable over a finite support \cite{basciftci_distributionally_2021}. 
 	
-	Consider the problem with $J$ customer sites and $I$ possible location for new facilities. The decision variable is $y \in \{0, 1\}^I$ where for some $i \in [I]$, $y_i = 1$ represents the decision of opening the facility at the location assigned to the index $i$ or not opening the facility if $y_i = 0$. Moreover, other information on those possible sites are available: $O \in \R_+^I$ the opening costs, $C \in \R_+^I$ the capacities and $t \in \R_+^{I \times J}$ the transportation fees for transporting one unit of merchandise from a facility to a customer site. About those lasts, $r \in \R_+^J$ the revenue for selling one item and $\Dcal = \{\xi_k \in \R_+: k \in [K]\} \subset \R_+^K$ the support for the demand are known. To simplify the notation suppose that $\xi_k < \xi_{k+1}$ for any $k \in [K-1]$ and denote $D = \max \Dcal$. Note that the support of the demand is the same for every customer sites. The deterministic model is
+	Consider the problem with $J$ customer sites and $I$ possible location for new facilities. The decision variable is $y \in \{0, 1\}^I$ where for some $i \in [I]$, $y_i = 1$ represents the decision of opening the facility at the location assigned to the index $i$ or not opening the facility if $y_i = 0$. Moreover, other information on those possible sites are available: $O \in \R_+^I$ the opening costs, $C \in \R_+^I$ the capacities and $t \in \R_+^{I \times J}$ the transportation fees for transporting one unit of merchandise from a facility to a customer site. About those lasts, $r \in \R_+^J$ the revenue for selling one item and $\Dcal = \{\xi_k \in \R_+: k \in [K]\} \subset \R_+^K$ the support for the demand are known. To simplify the notation suppose that $\xi_k < \xi_{k+1}$ for any $k \in [K-1]$ and denote $D = \frac{1}{K} \sum_{k \in [K]} \xi_k$. Note that the support of the demand is the same for every customer sites. The deterministic model is
 	\begin{subequations} \label{eq:deterministic_problem}
 		\begin{align}
-			\min_{y \in \{0, 1\}^I} &\quad O^\T y + \sum_{i \in [I]} \sum_{j \in [J]} (t_{ij} - r_j) x_{ij} \\
+			\min_{y \in \{0, 1\}^I} &\quad O^\T y + \sum_{i \in [I]} \sum_{j \in [J]} t_{ij} x_{ij} + \sum_{j \in [J]} (p_j s_j - r_j D) \\
 			\text{s.t.} &\quad x_{ij} \le C_i y_i, \quad \forall i \in [I] \\ \label{eq:deterministic_problem:capacity}
-			&\quad \sum_{i \in [I]} x_{ij} \le D, \quad \forall j \in [J] \\ \label{eq:deterministic_problem:demand}
+			&\quad \sum_{i \in [I]} x_{ij} + s_j = D, \quad \forall j \in [J] \\ \label{eq:deterministic_problem:demand}
 			&\quad x_{ij} \ge 0, \quad \forall i \in [I], j \in [J]
 		\end{align}
 	\end{subequations}
@@ -83,8 +84,6 @@
 	However, in many real-world tasks, customer demand or other parameters of the model is not deterministic. Parameters, demand in specific, have unknown probability distributions, and we face ambiguity set over realization of parameters or distributions that these parameters are sampled from. For example, in the Problem \eqref{eq:deterministic_problem}, the demand might be an unknown random variable. In this case, we can define an ambiguity set that covers scenarios from which random variable can takes value. Alternatively, we can define ambiguity set over distributions that model the demand.
 	
 	\subsection*{Litterature}
-	% TODO: Review of litterature.
-	% I was wainting more like a history of this topic!!
 	Facility location problem is studied to addresses the question of where to establish a resource that most users can benefit from. The resource can be healthcare facility \cite{ahmadi2017survey} and police stations \cite{borba2022optimizing}.
 	
 	Cornuéjols et al. started the modeling from deterministic and continue to elaborate how to account uncertainty of parameters \cite{cornuejols_uncapicitated_1983}. Cheng et al. address the capacitated facility location problem with uncertain facility capacity and customer demand \cite{cheng_distributionally_2024} . The objective is to minimize total costs while ensuring system reliability. It employs a \gls{dro} framework with a scenario-wise ambiguity set, reformulated into a mixed-integer linear programming model for practical solutions. Shehadeh addresses the mobile facility fleet-sizing, routing, and scheduling problem under time-dependent, random demand using two distributionally robust optimization (DRO) models \cite{shehadeh_distributionally_2023}. The models minimize fleet establishment and operational costs, incorporating risk measures (expectation or CVaR) over ambiguous demand distributions. The authors propose a decomposition-based solution and symmetry-breaking constraints, improving computational efficiency and convergence.
@@ -92,17 +91,13 @@
 	The optimal decision can itself affect the uncertain parameters. In this setting, integrating decision dependent uncertainty is studied in two approaches. One considers how decisions influence the time of revealing information about uncertainty, while the second approaches, focused on how decision change the underlying distribution. As an example of first group, Basciftci et al. address the challenge of balancing flexibility and decision commitment in multistage stochastic programming, where frequent decision revisions are impractical \cite{basciftci2024adaptive}. It introduces adaptive multistage stochastic programming, a novel framework that optimally determines revision times based on the allowed flexibility, combining theoretical insights with a specialized decomposition method for computational efficiency. Through experiments on stochastic lot-sizing and generation expansion planning, the proposed approach demonstrates significant performance improvements by optimizing revision stages, achieving near-flexible outcomes even in constrained settings.
 
 	For the second approach that described the effect of the decision on the ambiguity set, Rahimian and Mehrotra address a two-stage stochastic program with continuous recourse, where the distribution of random parameters depends on the decisions, modeled using a polyhedral ambiguity set for distributional robustness \cite{rahimiandistributionally}. The problem is reformulated as a nonconvex two-stage stochastic program, including cases with bilinear constraints or concave objectives, and solved using finitely-convergent, decomposition-based cutting plane algorithms. Computational results demonstrate the method’s application to joint pricing and stocking decisions in a multiproduct newsvendor problem with price-dependent demand.
-	\cite{shehadeh_distributionally_2023} addresses the mobile facility fleet-sizing, routing, and scheduling problem under time-dependent, random demand using two distributionally robust optimization (DRO) models. The models minimize fleet establishment and operational costs, incorporating risk measures (expectation or CVaR) over ambiguous demand distributions. The authors propose a decomposition-based solution and symmetry-breaking constraints, improving computational efficiency and convergence.
-	
-	\subsection*{Outline and contributions}
-	% TODO
 
 	\section{Distributionally robust counterpart model}
 	Under the \gls{dro} scheme, the demand is a random variable. Let $d$ be the demand of the costumer sites with $\Dcal^J$ as support. Define the uncertainty set as the set of possible distributions for $d$,
 	\begin{equation} \label{eq:def_uncertainty_set}
 		U \subset \left\{\pi \in [0, 1]^{J \times K}: \sum_{k \in [K]} \pi_{jk} = 1, j \in [J]\right\}.
 	\end{equation}
-	and to force our model to sell merchandise, define $p \in \R_+^J$ the penalty for not completing the demand of one item, such that $p_j > t_{ij}$ for any $i \in [I], j \in [J]$. The \gls{dro} problem is
+	let define $p \in \R_+^J$ the penalty for not completing the demand of one item, such that $p_j > t_{ij}$ for any $i \in [I], j \in [J]$. The \gls{dro} problem is
 	\begin{equation}\label{eq:dro_outter_problem}
 		\min_{y \in \{0, 1\}^I} \left\{O^\T y + \max_{\pi \in U} \E h(y, d)\right\},
 	\end{equation}
@@ -110,17 +105,19 @@
 	\begin{subequations} \label{eq:dro_inner_problem}
 		\begin{align}
 			h(y, d) = \min_{x, s} &\quad \sum_{i \in [I]} \sum_{j \in [J]} t_{ij}x_{ij} + \sum_{j \in [J]} (p_j s_j - r_j d_j) \\
-			\text{s.t.} &\quad \sum_{i \in [I]} x_{ij} + s_j = d_j \quad \forall j \in [J] \\ \label{eq:dro_inner_problem:demand}
+			\text{s.t.} &\quad \sum_{i \in [I]} x_{ij} + s_j = d_j \quad \forall j \in [J] \label{eq:dro_inner_problem:demand}\\
 			&\quad x_{ij} \le C_i y_i \quad \forall i \in [I], j \in [J] \\
 			&\quad s_i, x_{ij} \ge 0 \quad \forall i \in [I], j \in [J].
 		\end{align}
 	\end{subequations}
-	The new free variable $s$ represents the number of item not satisfied. The Constraint \eqref{eq:dro_inner_problem:demand} imposes that $s$ is the difference between the demand from costumer sites and the satisfied demand.
+	The new free variable $s$ represents the number of item not satisfied. The Constraint \eqref{eq:dro_inner_problem:demand} imposes that $s$ is the difference between the demand from costumer sites and the transferred cargo.
 	
 	% TODO: Learn and Predict?
 	
-	The decision of opening or not a specific facility may influence the demand. In the case of carsharing, there is a relation between the accessibility and the demand \cite{shaheen_carsharing_2006}.
-	% TODO: Add more sauce to the above paragraph.
+	The decision of opening or not a specific facility may influence the demand. If, customers find more available recourse near them, they probably order that more. A simple example can be Tim Hortons; if students, or even professors, find near branch close to HEC, they would buy it more, but up to some upper bound. In the following, we would discuss how we can model influence of decision on random variable demand.
+	
+	% In the case of carsharing, there is a relation between the accessibility and the demand \cite{shaheen_carsharing_2006}.
+	% % TODO: Add more sauce to the above paragraph.
 	
 	\subsection{Decision-dependant distributionally robust model}
 	Assume from now that the decision affects the demand and from now the uncertainty set depends on the decision. The \gls{dro} problem remains the same except for the uncertainty set. It leads to the \gls{dddro} problem 
@@ -239,8 +236,8 @@
 	\end{theorem}
 	
 	\subsubsection{Tighter constraints}
-	By finding extreme rays, new constraints can be added to Problem \eqref{eq:prob_BAS_milp} to accelerate the convergence of the algorithm.
-	% TODO: Add some sauce. You can explain little bit more about those constraints.
+
+	In this section we discuss how to exert problem structure to introduce valid inequalities. Valid inequalities are constraints that are added to the problem that restrict the relaxed feasible region, without cutting any feasible integer solution. By finding extreme rays, new constraints can be added to problem \eqref{eq:prob_BAS_milp} to accelerate the convergence of the algorithm.
 	
 	\begin{proposition} \label{prop:valid_inequalities}
 		The following inequalities are valid for Problem \eqref{eq:prob_BAS_milp}
@@ -261,18 +258,24 @@
 		\item the \gls{dro} problem (Problem \eqref{eq:dro_outter_problem}),
 		\item the \gls{dddro} problem (Problem \eqref{eq:dddro_outter_problem}),
 	\end{itemize}
-	on two statistics: the total cost and the unsatisfied demand. A \gls{flp} is randomly generated and will be used throughout all situations. The experiment parameter are mostly taken from Basciftci et al. \cite{basciftci_distributionally_2021}. The generation is as follow:
+	in three situations:
 	\begin{enumerate}
-		\item 10 of possible location for facilities and the 20 customer sites position are generated on a grid of $[-10, 10]^2$.
+		\item the distribution of the demand is independent of the decision and may not be contained in a specific uncertainty set, \label{sit:ind_rand}
+		\item the distribution of the demand is independent of the decision, but is in a specific uncertainty set, \label{sit:ind_unc}
+		\item the distribution of the demand is dependent of the decision and is in a specific uncertainty set, \label{sit:dep_unc}
+	\end{enumerate}
+	on two statistics: the total cost and the unsatisfied demand. A \gls{flp} is randomly generated and will be used throughout all situations. The experiment parameters are mostly taken from Basciftci et al. \cite{basciftci_distributionally_2021}. The generation is as follows:
+	\begin{enumerate}
+		\item 10 of the possible location for facilities and the 20 customer site positions are generated on a grid of $[-10, 10]^2$.
 		\item For each facility, the opening cost is randomly generated by a uniform over $[5000, 10000)$.
 		\item For each facility, the capacity is randomly generated by a uniform over $[10, 20)$.
-		\item For each customer sites, the revenue for selling one item is 150.
-		\item For each customer sites, the penalty is 250.
-		\item For each customer sites, the demand support is $\{1, \dots, 100\}$.
+		\item For each customer site, the revenue for selling one item is 150.
+		\item For each customer site, the penalty is 250.
+		\item For each customer site, the demand support is $\{1, \dots, 100\}$.
 		\item For each pair of facilities and customer sites, the transportation cost for moving one item is proportional to the euclidean distance between both, and the factor of proportionality is randomly generated by a uniform over $[2, 3)$.
 	\end{enumerate}
 	
-	The hyperparameters for the \gls{dddro} Problem are $\bar{\mu}_j \sim \mathrm{Unif}(20, 40)$ and $\bar{\sigma}_j^2 = \bar{\mu}_j$, $\lambda_{j i}^\mu \propto \exp(-t_{ij} / 25)$ and $\lambda_{j i}^\mu = \lambda_{j i}^\sigma$.
+	The hyperparameters for the \gls{dddro} Problem are $\bar{\mu}_j \sim \mathrm{Unif}(30, 50)$ and $\bar{\sigma}_j^2 = (50 - 30) / 12$, $\lambda_{j i}^\mu = \exp(-t_{ij} / 20)$ and $\lambda_{j i}^\mu = \lambda_{j i}^\sigma$, $\varepsilon_j^\mu = 10$, $\underline{\varepsilon}_j^\sigma = 1$, $\overline{\varepsilon}_j^\sigma = 2$.
 	
 	To find the optimal cost with respect to a decision $\hat{y}$ and a set of $N$ realizations of demand $\left\{\hat{d}^1, \dots, \hat{d}^N\right\}$, the following problem is solved
 	\begin{subequations}
@@ -284,43 +287,68 @@
 		\end{align}
 	\end{subequations}
 	
-
-	\begin{figure}[h!]
-		\includegraphics[width=\textwidth]{../figure/chosen_facility_costumer_site_pos.png}
-		\caption{Optimal decision of different models}
-		\label{fig:decisions}		
+	For the Situation \ref{sit:ind_rand}, independently of the decision, a distribution is randomly chosen over all possible distributions. For the Situation \ref{sit:ind_unc}, the mass function is the discretization of the probability density function of a Gaussian distribution with $\bar{\mu}_j$ and $\bar\sigma^2_j$ as parameters. Finally, the distribution used for Situation \ref{sit:dep_unc} is the same as with Situation \ref{sit:ind_unc} but with $\mu_j(y)$ and $\sigma_j^2(y)$ as parameter. In each case, 250 realizations of demands are used for benchmark the three models. The results are presented in Tables \ref{tab:cost_comparison} \& \ref{tab:unsatisfied_demand_comparison}.
+	
+	\begin{table}
+		\centering
+		\caption{Comparison of the cost (CI(95\%), $N = 250$)}
+		\label{tab:cost_comparison}
+		\begin{tabular}{c c c c}
+			\toprule
+			\textbf{Models} & \textbf{Situation \ref{sit:ind_rand}} & \textbf{Situation \ref{sit:ind_unc}} & \textbf{Situation \ref{sit:dep_unc}} \\
+			\midrule
+			\textbf{Deterministic} & $(-24347, -22901)$ & $(-24140, -22598)$ & $(-23890, -22414)$ \\
+			\textbf{\gls{dro}} & $(-2728, -1331)$ & $(-2751, -1366)$ & $(-3117, -1756)$ \\
+			\textbf{\gls{dddro}} & \textcolor{red}{$(-28758, -26577)$} & \textcolor{red}{$(-28261, -26084)$} & \textcolor{red}{$(-29194, -26984)$} \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\begin{table}
+		\centering
+		\caption{Comparison of the unsatisfied demand (CI(95\%), $N = 250$)}
+		\label{tab:unsatisfied_demand_comparison}
+		\begin{tabular}{c c c c}
+			\toprule
+			\textbf{Models} & \textbf{Situation \ref{sit:ind_rand}} & \textbf{Situation \ref{sit:ind_unc}} & \textbf{Situation \ref{sit:dep_unc}} \\
+			\midrule
+			\textbf{Deterministic} & $(92.23, 101.65)$ & $(90.04, 99.36)$ & $(89.53, 98.90)$ \\
+			\textbf{\gls{dro}} & $(322.65, 343.29)$ & $(320.45, 340.47)$ & $(324.03, 344.04)$ \\
+			\textbf{\gls{dddro}} & \textcolor{red}{$(0.05, 0.23)$} & \textcolor{red}{$(0.07, 0.28)$} & \textcolor{red}{$(0.02, 0.16)$} \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\begin{figure}
+		\centering
+		\includegraphics*[width=\textwidth]{../figure/report_expected_open_fac_deterministic.png}
+		\caption{Expected value of the demand with respect to the decision of the deterministic model}
+		\label{fig:expected_deterministic}
+	\end{figure}
+	\begin{figure}
+		\centering
+		\includegraphics*[width=\textwidth]{../figure/report_expected_open_fac_ddro.png}
+		\caption{Expected value of the demand with respect to the decision of the \gls{dddro} model}
+		\label{fig:expected_dddro}
 	\end{figure}
 
-	\begin{figure}[h!]
-		\includegraphics[width=\textwidth]{../figure/comparision.png}
-		\caption{Comparison of the performance of different models}
-			\label{fig:comparison}		
-		\end{figure}
-
-		% TODO: Present the results.
-		To illustrate how different models make the decision of opening a facility or not we perform experiments for 10 facilities and 20 customers. Figure \ref{fig:decisions} shows the final decisions. \gls{dddro} open more facilities, in comparision with \gls{dro}, and the deterministic ones.
-
-		% TODO: Any reason?
-		% The reason for this can be that ...
-
-	Figure \ref{fig:comparison}, compares the optimal objective value of different models, and how many units of product, $s$, decision maker have to buy from a third party company and pay $p$ for each unit. We can see \gls{dddro}, has lowest total cost. The result, also algins with unsatisfied demand. This is because $p$ is a high penalty and model decides to open more facilities, and not pay high cost $p$.
-
-
-\section{Further extension}
-
-After discussion with professor of the course, we planed to extend moment based ambiguity in equation\ref{eq:def_dd_BAS_uncertainty_set} to a simple form of polyhedral uncertainty set. After comprehensive literature review for insights, we found \cite{rahimiandistributionally} a new unplished paper. This work extends the moment based ambiguity set to a general polyhedral ambiguity set of the form:
-
-\begin{equation}\label{eq:ext}
-	P(x) := \left\{ p \geq 0 \ \middle| \underbar{p}_\omega \leq \ p_\omega \leq \bar{p}_\omega, \ \sum_{\omega \in [N]} p_\omega g_i(\xi_\omega) \leq \vartheta_i(x), \ i \in [s] \right\},
-	\end{equation}
-	where $g_i(\xi_\omega)$ are measurable functions of the random parameters $\xi_\omega$, and $\vartheta_i(x)$ are decision-dependent parameters.
-
-	A polyhedral ambiguity set \ref{eq:ext} is a general formulation of the ambiguity set based on Wasserstein distance of order 1 as in uncertainty set \ref{eq:wa}, and also a moment-based ambiguity set \ref{eq:mo}.
-
-	\begin{equation}\label{eq:wa}
-		\mathcal{P}(\boldsymbol{x})=\left\{\boldsymbol{p} \geq \mathbf{0} \left\lvert\, \begin{array}{l|l}
-		\exists \boldsymbol{z} \text { s.t. } \sum_{\omega \in[N]} \sum_{\omega^{\prime} \in[N]} z_{\omega \omega^{\prime}}\left\|\boldsymbol{\xi}_\omega-\boldsymbol{\xi}_{\omega^{\prime}}\right\| \leq \tau(\boldsymbol{x}), \quad \sum_{\omega \in[N]} p_\omega=1, \\
-		\sum_{\omega \in[N]} z_{\omega \omega^{\prime}}=p_\omega, \sum_{\omega^{\prime} \in[N]} z_{\omega \omega^{\prime}}=q_\omega, \omega \in[N]
+	In any situation, the \gls{dddro} model significantly does better. The simply deterministic model stay close to the \gls{dddro} model, and the \gls{dro} always. We can further analyze the decision of the deterministic model and the \gls{dddro} model. In Figures \ref{fig:expected_deterministic} \& \ref{fig:expected_dddro}, remark that the opened facilities from the \gls{dddro} model are such that the expected value of the demand remains high for most customer sites, rather than with the deterministic model.
+	
+	\section{Further extension}
+	
+	After discussion with professor of the course, we planed to extend moment based ambiguity in equation\ref{eq:def_dd_BAS_uncertainty_set} to a simple form of polyhedral uncertainty set. After comprehensive literature review for insights, we found \cite{rahimiandistributionally} a new unplished paper. This work extends the moment based ambiguity set to a general polyhedral ambiguity set of the form:
+	
+	\begin{equation}\label{eq:ext}
+		P(x) := \left\{ p \geq 0 \ \middle| \underbar{p}_\omega \leq \ p_\omega \leq \bar{p}_\omega, \ \sum_{\omega \in [N]} p_\omega g_i(\xi_\omega) \leq \vartheta_i(x), \ i \in [s] \right\},
+		\end{equation}
+		where $g_i(\xi_\omega)$ are measurable functions of the random parameters $\xi_\omega$, and $\vartheta_i(x)$ are decision-dependent parameters.
+	
+		A polyhedral ambiguity set \ref{eq:ext} is a general formulation of the ambiguity set based on Wasserstein distance of order 1 as in uncertainty set \ref{eq:wa}, and also a moment-based ambiguity set \ref{eq:mo}.
+	
+		\begin{equation}\label{eq:wa}
+			\mathcal{P}(\boldsymbol{x})=\left\{\boldsymbol{p} \geq \mathbf{0} \left\lvert\, \begin{array}{l|l}
+			\exists \boldsymbol{z} \text { s.t. } \sum_{\omega \in[N]} \sum_{\omega^{\prime} \in[N]} z_{\omega \omega^{\prime}}\left\|\boldsymbol{\xi}_\omega-\boldsymbol{\xi}_{\omega^{\prime}}\right\| \leq \tau(\boldsymbol{x}), \quad \sum_{\omega \in[N]} p_\omega=1, \\
+			\sum_{\omega \in[N]} z_{\omega \omega^{\prime}}=p_\omega, \sum_{\omega^{\prime} \in[N]} z_{\omega \omega^{\prime}}=q_\omega, \omega \in[N]
 		\end{array}\right.\right\},
 		\end{equation}
 

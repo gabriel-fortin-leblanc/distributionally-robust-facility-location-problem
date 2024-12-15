@@ -35,7 +35,8 @@ class Solver(ABC):
         if type(value) is not np.ndarray:
             raise TypeError("'y' must be a Numpy array.")
         self._y = value
-        self._y[self._y < 0] = 0
+        self._y[self._y < 0.3] = 0
+        self._y[self._y > 0.7] = 1
 
     @property
     def obj(self):
@@ -61,15 +62,18 @@ class PSolver(Solver):
         """
         Solve the problem `flp` and return a boolean depending on the success.
         """
+        d = flp.sd.mean()
         model = gp.Model()
         y = model.addMVar(flp.nf, vtype=GRB.BINARY)
         x = model.addMVar((flp.nf, flp.nc))
+        s = model.addMVar(flp.nc)
         model.setObjective(
-            flp.oc @ y + ((flp.tc - flp.rc[np.newaxis, :]) * x).sum()
+            flp.oc @ y + (flp.tc * x).sum() + (flp.pc * s - flp.rc * d).sum()
         )
-        model.addConstr(x >= 0)
-        model.addConstr(x.sum(0) <= flp.sd.max())
+        model.addConstr(x.sum(0) + s == d)
         model.addConstr(x <= (flp.cf * y)[:, np.newaxis])
+        model.addConstr(x >= 0)
+        model.addConstr(s >= 0)
         model.optimize()
 
         self.y = y.x
